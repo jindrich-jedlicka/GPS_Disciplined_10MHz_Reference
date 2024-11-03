@@ -1,4 +1,4 @@
-#include <SoftwareSerial.h>
+#include "MySoftwareSerial.h"
 #include <RotaryEncoder.h>
 #include <LiquidCrystal.h>
 
@@ -43,6 +43,8 @@ void setup()
   
   lcd.setCursor(0, 1);
   lcd.print(pos, HEX);
+
+  serial.begin(9600);
 }
 
 ISR(PCINT1_vect) 
@@ -63,11 +65,9 @@ void loop()
       lcd.print("        ");
       lcd.setCursor(0, 1);
       lcd.print(pos, HEX);
-
-      //AltSoftSerial::begin(9600);
-//      serial.write((uint8_t)pos);
-      //AltSoftSerial::end();
+      
   }
+  serial.write((uint8_t)pos);
 }
 
 void checkPosition()
