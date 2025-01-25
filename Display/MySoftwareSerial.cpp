@@ -1,32 +1,32 @@
 /*
-SoftwareSerial.cpp (formerly NewSoftSerial.cpp) - 
-Multi-instance software serial library for Arduino/Wiring
--- Interrupt-driven receive and other improvements by ladyada
+  SoftwareSerial.cpp (formerly NewSoftSerial.cpp) -
+  Multi-instance software serial library for Arduino/Wiring
+  -- Interrupt-driven receive and other improvements by ladyada
    (http://ladyada.net)
--- Tuning, circular buffer, derivation from class Print/Stream,
+  -- Tuning, circular buffer, derivation from class Print/Stream,
    multi-instance support, porting to 8MHz processors,
-   various optimizations, PROGMEM delay tables, inverse logic and 
+   various optimizations, PROGMEM delay tables, inverse logic and
    direct port writing by Mikal Hart (http://www.arduiniana.org)
--- Pin change interrupt macros by Paul Stoffregen (http://www.pjrc.com)
--- 20MHz processor support by Garrett Mace (http://www.macetech.com)
--- ATmega1280/2560 support by Brett Hagman (http://www.roguerobotics.com/)
+  -- Pin change interrupt macros by Paul Stoffregen (http://www.pjrc.com)
+  -- 20MHz processor support by Garrett Mace (http://www.macetech.com)
+  -- ATmega1280/2560 support by Brett Hagman (http://www.roguerobotics.com/)
 
-This library is free software; you can redistribute it and/or
-modify it under the terms of the GNU Lesser General Public
-License as published by the Free Software Foundation; either
-version 2.1 of the License, or (at your option) any later version.
+  This library is free software; you can redistribute it and/or
+  modify it under the terms of the GNU Lesser General Public
+  License as published by the Free Software Foundation; either
+  version 2.1 of the License, or (at your option) any later version.
 
-This library is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
-Lesser General Public License for more details.
+  This library is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+  Lesser General Public License for more details.
 
-You should have received a copy of the GNU Lesser General Public
-License along with this library; if not, write to the Free Software
-Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+  You should have received a copy of the GNU Lesser General Public
+  License along with this library; if not, write to the Free Software
+  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-The latest version of this library can always be found at
-http://arduiniana.org.
+  The latest version of this library can always be found at
+  http://arduiniana.org.
 */
 
 // When set, _DEBUG co-opts pins 11 and 13 for debugging with an
@@ -35,9 +35,9 @@ http://arduiniana.org.
 #define _DEBUG 0
 #define _DEBUG_PIN1 11
 #define _DEBUG_PIN2 13
-// 
+//
 // Includes
-// 
+//
 #include <avr/interrupt.h>
 #include <avr/pgmspace.h>
 #include <Arduino.h>
@@ -48,7 +48,7 @@ http://arduiniana.org.
 // Statics
 //
 SoftwareSerial *SoftwareSerial::active_object = 0;
-uint8_t SoftwareSerial::_receive_buffer[_SS_MAX_RX_BUFF]; 
+uint8_t SoftwareSerial::_receive_buffer[_SS_MAX_RX_BUFF];
 volatile uint8_t SoftwareSerial::_receive_buffer_tail = 0;
 volatile uint8_t SoftwareSerial::_receive_buffer_head = 0;
 
@@ -77,13 +77,13 @@ inline void DebugPulse(uint8_t, uint8_t) {}
 // Private methods
 //
 
-/* static */ 
-inline void SoftwareSerial::tunedDelay(uint16_t delay) { 
+/* static */
+inline void SoftwareSerial::tunedDelay(uint16_t delay) {
   _delay_loop_2(delay);
 }
 
 // This function sets the current object as the "listening"
-// one and returns true if it replaces another 
+// one and returns true if it replaces another
 bool SoftwareSerial::listen()
 {
   if (!_rx_delay_stopbit)
@@ -124,9 +124,9 @@ void SoftwareSerial::recv()
 {
 
 #if GCC_VERSION < 40302
-// Work-around for avr-gcc 4.3.0 OSX version bug
-// Preserve the registers that the compiler misses
-// (courtesy of Arduino forum user *etracer*)
+  // Work-around for avr-gcc 4.3.0 OSX version bug
+  // Preserve the registers that the compiler misses
+  // (courtesy of Arduino forum user *etracer*)
   asm volatile(
     "push r18 \n\t"
     "push r19 \n\t"
@@ -137,7 +137,7 @@ void SoftwareSerial::recv()
     "push r26 \n\t"
     "push r27 \n\t"
     ::);
-#endif  
+#endif
 
   uint8_t d = 0;
 
@@ -155,7 +155,7 @@ void SoftwareSerial::recv()
     DebugPulse(_DEBUG_PIN2, 1);
 
     // Read each of the 8 bits
-    for (uint8_t i=8; i > 0; --i)
+    for (uint8_t i = 8; i > 0; --i)
     {
       tunedDelay(_rx_delay_intrabit);
       d >>= 1;
@@ -174,8 +174,8 @@ void SoftwareSerial::recv()
       // save new data in buffer: tail points to where byte goes
       _receive_buffer[_receive_buffer_tail] = d; // save new byte
       _receive_buffer_tail = next;
-    } 
-    else 
+    }
+    else
     {
       DebugPulse(_DEBUG_PIN1, 1);
       _buffer_overflow = true;
@@ -191,8 +191,8 @@ void SoftwareSerial::recv()
   }
 
 #if GCC_VERSION < 40302
-// Work-around for avr-gcc 4.3.0 OSX version bug
-// Restore the registers that the compiler misses
+  // Work-around for avr-gcc 4.3.0 OSX version bug
+  // Restore the registers that the compiler misses
   asm volatile(
     "pop r27 \n\t"
     "pop r26 \n\t"
@@ -246,7 +246,7 @@ ISR(PCINT3_vect, ISR_ALIASOF(PCINT0_vect));
 //
 // Constructor
 //
-SoftwareSerial::SoftwareSerial(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic /* = false */) : 
+SoftwareSerial::SoftwareSerial(uint8_t receivePin, uint8_t transmitPin, bool inverse_logic /* = false */) :
   _rx_delay_centering(0),
   _rx_delay_intrabit(0),
   _rx_delay_stopbit(0),
@@ -317,7 +317,7 @@ void SoftwareSerial::begin(long speed)
 
   // Only setup rx when we have a valid PCINT for this pin
   if (digitalPinToPCICR((int8_t)_receivePin)) {
-    #if GCC_VERSION > 40800
+#if GCC_VERSION > 40800
     // Timings counted from gcc 4.8.2 output. This works up to 115200 on
     // 16Mhz and 57600 on 8Mhz.
     //
@@ -344,14 +344,14 @@ void SoftwareSerial::begin(long speed)
     // time for ISR cleanup, which makes 115200 baud at 16Mhz work more
     // reliably
     _rx_delay_stopbit = subtract_cap(bit_delay * 3 / 4, (37 + 11) / 4);
-    #else // Timings counted from gcc 4.3.2 output
+#else // Timings counted from gcc 4.3.2 output
     // Note that this code is a _lot_ slower, mostly due to bad register
     // allocation choices of gcc. This works up to 57600 on 16Mhz and
     // 38400 on 8Mhz.
     _rx_delay_centering = subtract_cap(bit_delay / 2, (4 + 4 + 97 + 29 - 11) / 4);
     _rx_delay_intrabit = subtract_cap(bit_delay, 11 / 4);
     _rx_delay_stopbit = subtract_cap(bit_delay * 3 / 4, (44 + 17) / 4);
-    #endif
+#endif
 
 
     // Enable the PCINT for the entire port here, but never disable it
@@ -376,10 +376,10 @@ void SoftwareSerial::begin(long speed)
 
 void SoftwareSerial::setRxIntMsk(bool enable)
 {
-    if (enable)
-      *_pcint_maskreg |= _pcint_maskvalue;
-    else
-      *_pcint_maskreg &= ~_pcint_maskvalue;
+  if (enable)
+    *_pcint_maskreg |= _pcint_maskvalue;
+  else
+    *_pcint_maskreg &= ~_pcint_maskvalue;
 }
 
 void SoftwareSerial::end()
@@ -463,7 +463,7 @@ size_t SoftwareSerial::write(uint8_t b)
 
   SREG = oldSREG; // turn interrupts back on
   tunedDelay(_tx_delay);
-  
+
   return 1;
 }
 

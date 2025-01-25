@@ -1,6 +1,7 @@
 #include "MySoftwareSerial.h"
 #include <RotaryEncoder.h>
 #include <LiquidCrystal.h>
+#include <TinyGPS++.h>
 
 //setting up LCD INPUT pins
 #define PIN_RS 12
@@ -18,7 +19,9 @@ RotaryEncoder *encoder;
 
 #define PIN_RX 2
 #define PIN_TX 3
-SoftwareSerial serial(PIN_RX, PIN_TX); 
+SoftwareSerial gps(PIN_RX, PIN_TX);
+
+TinyGPSPlus gpsParser;
 
 static int pos = 0;
 
@@ -31,43 +34,61 @@ void setup()
   //  pinMode(stop1_pin, INPUT);
   //  pinMode(reset_pin, INPUT);
   encoder = new RotaryEncoder(PIN_IN1, PIN_IN2, RotaryEncoder::LatchMode::FOUR3);
-//  attachInterrupt(digitalPinToInterrupt(PIN_IN1), checkPosition, CHANGE);
-//  attachInterrupt(digitalPinToInterrupt(PIN_IN2), checkPosition, CHANGE);
+  //  attachInterrupt(digitalPinToInterrupt(PIN_IN1), checkPosition, CHANGE);
+  //  attachInterrupt(digitalPinToInterrupt(PIN_IN2), checkPosition, CHANGE);
 
   PCICR |= (1 << PCIE1);
-  PCMSK1 |= (1 << PCINT10) | (1 << PCINT11); 
-  
+  PCMSK1 |= (1 << PCINT10) | (1 << PCINT11);
+
   lcd.setCursor(0, 0);
   lcd.print("Rotary Encoder");
   encoder->tick(); // just call tick() to check the state.
-  
+
   lcd.setCursor(0, 1);
   lcd.print(pos, HEX);
 
-  serial.begin(9600);
+  gps.begin(9600);
+  Serial.begin(9600);
+  Serial.println(" ");
+  Serial.println("Neo-8M GPSDO ");
 }
 
-ISR(PCINT1_vect) 
+ISR(PCINT1_vect)
 {
-   encoder->tick(); // just call tick() to check the state.
+  encoder->tick(); // just call tick() to check the state.
 }
+
+char readChar;
 
 void loop()
 {
   //encoder->tick(); // just call tick() to check the state.
-  
+
   int newPos = encoder->getPosition();
   if (newPos != pos)
   {
-      pos = newPos;
-      
-      lcd.setCursor(0, 1);
-      lcd.print("        ");
-      lcd.setCursor(0, 1);
-      lcd.print(pos, HEX);
-      
+    pos = newPos;
+
+    lcd.setCursor(0, 1);
+    lcd.print("        ");
+    lcd.setCursor(0, 1);
+    lcd.print(pos, HEX);
   }
-  serial.write((uint8_t)pos);
+  if (gps.available())
+  {
+    readChar = gps.read();
+    Serial.write(readChar);
+    gpsParser.encode(readChar);
+  }
+  //gpsParser.
+
+  if (Serial.available() > 0)
+  {
+    readChar = Serial.read(); 
+//    lcd.setCursor(5, 1);
+//    lcd.print(readChar, HEX);
+    gps.write(readChar);
+  }
 }
 
 void checkPosition()
