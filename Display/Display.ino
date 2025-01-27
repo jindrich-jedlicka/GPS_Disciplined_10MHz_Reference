@@ -1,7 +1,10 @@
 #include "MySoftwareSerial.h"
 #include <RotaryEncoder.h>
 #include <LiquidCrystal.h>
-#include <TinyGPS++.h>
+//#include <TinyGPS++.h>
+
+#define NMEAGPS_PARSE_GSV
+#include <NMEAGPS.h>
 
 //setting up LCD INPUT pins
 #define PIN_RS 12
@@ -19,9 +22,10 @@ RotaryEncoder *encoder;
 
 #define PIN_RX 2
 #define PIN_TX 3
-SoftwareSerial gps(PIN_RX, PIN_TX);
+SoftwareSerial gpsSerial(PIN_RX, PIN_TX);
 
-TinyGPSPlus gpsParser;
+NMEAGPS nmeaGps;
+//TinyGPSPlus gpsParser;
 
 static int pos = 0;
 
@@ -47,7 +51,7 @@ void setup()
   lcd.setCursor(0, 1);
   lcd.print(pos, HEX);
 
-  gps.begin(9600);
+  gpsSerial.begin(9600);
   Serial.begin(9600);
   Serial.println(" ");
   Serial.println("Neo-8M GPSDO ");
@@ -74,12 +78,13 @@ void loop()
     lcd.setCursor(0, 1);
     lcd.print(pos, HEX);
   }
-  if (gps.available())
+  if (gpsSerial.available())
   {
-    readChar = gps.read();
+    readChar = gpsSerial.read();
     Serial.write(readChar);
-    gpsParser.encode(readChar);
+    //gpsParser.encode(readChar);
   }
+  //nmeaGps.satellites[0];
   //gpsParser.
 
   if (Serial.available() > 0)
@@ -87,7 +92,7 @@ void loop()
     readChar = Serial.read(); 
 //    lcd.setCursor(5, 1);
 //    lcd.print(readChar, HEX);
-    gps.write(readChar);
+    gpsSerial.write(readChar);
   }
 }
 
