@@ -302,8 +302,9 @@ void display_satelites_info()
   _sat_info_count = count;
 }
 
-#define SCALE_DIV 12375
+#define SCALE_DIV 10000
 #define SCALE_DIV_HALF SCALE_DIV >> 1
+#define MAX_BAR_VALUE 7
 
 uint8_t toBarNumber(uint8_t snr)
 {
@@ -314,6 +315,9 @@ uint8_t toBarNumber(uint8_t snr)
   if (SCALE_DIV_HALF < (val % SCALE_DIV))
     val++;
 
+   if (MAX_BAR_VALUE < val)
+    val = MAX_BAR_VALUE;
+   
    return (uint8_t)val;
 }
 
