@@ -1,7 +1,8 @@
 #include <NMEAGPS.h>
 #include <NeoSWSerial.h>
 #include <RotaryEncoder.h>
-#include <LiquidCrystal.h>
+#include <NMEAGPS.h>
+#include "GpsLiquidCrystal.h"
 
 #define INVALID_VAL 0xFF
 
@@ -9,106 +10,7 @@
 // Display
 //////////////////////////////////////////////////////////////////////////////
 
-//setting up LCD INPUT pins
-#define PIN_RS 12
-#define PIN_ENABLE 11
-#define PIN_D4 10
-#define PIN_D5 9
-#define PIN_D6 8
-#define PIN_D7 7
-
-#define DISP_ROWS 2
-#define DISP_COLS 16
-
-LiquidCrystal lcd(PIN_RS, PIN_ENABLE, PIN_D4, PIN_D5, PIN_D6, PIN_D7);
-
-byte one_line[8] = {
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B11111,
-};
-
-byte two_lines[8] = {
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B11111,
-  B11111,
-};
-
-byte three_lines[8] = {
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B11111,
-  B11111,
-  B11111,
-};
-
-byte four_lines[8] = {
-  B00000,
-  B00000,
-  B00000,
-  B00000,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-};
-
-byte five_lines[8] = {
-  B00000,
-  B00000,
-  B00000,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-};
-
-byte six_lines[8] = {
-  B00000,
-  B00000,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-};
-
-byte seven_lines[8] = {
-  B00000,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-};
-
-byte eight_lines[8] = {
-  B00000,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-  B11111,
-};
+static GpsLiquidCrystal lcd;
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -162,15 +64,16 @@ static uint8_t _sat_info_count;
 
 void setup()
 {
-  lcd.createChar(0, one_line);
-  lcd.createChar(1, two_lines);
-  lcd.createChar(2, three_lines);
-  lcd.createChar(3, four_lines);
-  lcd.createChar(4, five_lines);
-  lcd.createChar(5, six_lines);
-  lcd.createChar(6, seven_lines);
-  lcd.createChar(7, eight_lines);
-  lcd.begin(DISP_COLS, DISP_ROWS); //starting LCD
+  lcd.begin();
+  // lcd.createChar(0, one_line);
+  // lcd.createChar(1, two_lines);
+  // lcd.createChar(2, three_lines);
+  // lcd.createChar(3, four_lines);
+  // lcd.createChar(4, five_lines);
+  // lcd.createChar(5, six_lines);
+  // lcd.createChar(6, seven_lines);
+  // lcd.createChar(7, eight_lines);
+  // lcd.begin(DISP_COLS, DISP_ROWS); //starting LCD
 
   //defining pins if they are INPUT or OUTPUT pins
   //  pinMode(start_pin, INPUT);
