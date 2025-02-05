@@ -4,6 +4,8 @@
 #include <NMEAGPS.h>
 #include "GpsLiquidCrystal.h"
 
+
+
 class SateliteInfoView
 {
 public:
@@ -13,7 +15,7 @@ public:
   }
 
 public:
-  void display_data(GpsLiquidCrystal& lcd, const satellite_view_t& _satelite_data)
+  void display_data(GpsLiquidCrystal& lcd, const satellite_view_t& satelite_data)
   {
 
   }

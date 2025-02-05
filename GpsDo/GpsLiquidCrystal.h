@@ -111,6 +111,8 @@ public:
   }
 
 public:
+  const uint8_t MAX_BAR_VALUE = 7;
+
   void begin() 
   {
     createChar(0, one_line);
@@ -122,6 +124,42 @@ public:
     createChar(6, seven_lines);
     createChar(7, eight_lines);
     LiquidCrystal::begin(DISP_COLS, DISP_ROWS);  //starting LCD
+    clear();
+  }
+
+public:
+  uint8_t print_bar_val(uint8_t val)
+  {
+    if (MAX_BAR_VALUE < val)
+      val = MAX_BAR_VALUE;
+
+    return write(val);
+  }
+
+  uint8_t print_dec_number(uint16_t n, const uint8_t len, const char prefix_char = '\0')
+  {
+    if (len == 0)
+      return 0;
+    
+    char buf[len]; 
+    char *str = &buf[sizeof(buf)];
+    uint8_t i = 0;
+
+    do {
+      char c = n % 10;
+      n /= 10;
+
+      *--str = c + '0';
+      i++;
+    } while(n && i < len);
+
+    if (prefix_char != '\0') {
+      while (i < len) {
+        *--str = prefix_char;
+        i++;
+      }
+    }
+    return write(str, (size_t)i);
   }
 };
 
