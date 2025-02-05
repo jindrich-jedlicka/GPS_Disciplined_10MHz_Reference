@@ -22,6 +22,7 @@
 #define SAT_INFO_UNUSED_CHAR ' '
 #define SAT_INFO_UNTRACKED_CHAR 'x'
 
+#include <NMEAGPS.h>
 #include "GpsLiquidCrystal.h"
 
 class GpsView
@@ -141,21 +142,16 @@ private:
 
         for (uint8_t i = 0; i < count; i++)
         {
-          if (nmeaGps.satellites[i].tracked)
-          {
-            dsp.print_bar_val(to_bar_value(nmeaGps.satellites[i].snr));
-          }
+          const NMEAGPS::satellite_view_t& sat = nmeaGps.satellites[i];
+          
+          if (sat.tracked)
+            dsp.print_bar_val(to_bar_value(sat.snr));
           else
-          {
             dsp.print(SAT_INFO_UNTRACKED_CHAR);
-          }
         }
-        if (count < _sat_info_count)
+        for (uint8_t i = count; i < _sat_info_count; i++)
         {
-          for (uint8_t i = count; i < _sat_info_count; i++)
-          {
-            dsp.print(SAT_INFO_UNUSED_CHAR);
-          }
+          dsp.print(SAT_INFO_UNUSED_CHAR);
         }
         _sat_info_count = count;
       }
