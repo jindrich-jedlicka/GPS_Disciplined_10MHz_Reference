@@ -149,20 +149,22 @@ private:
           else
             dsp.print(SAT_INFO_UNTRACKED_CHAR);
         }
-        for (uint8_t i = count; i < _sat_info_count; i++)
-        {
-          dsp.print(SAT_INFO_UNUSED_CHAR);
-        }
+        fill_unused_chars(dsp, _sat_info_count);
         _sat_info_count = count;
       }
       else
       {
-        for (uint8_t i = 0; i < maxSatelites; i++)
+        fill_unused_chars(dsp, maxSatelites);
+        _sat_info_count = 0;
+      }
+    }
+
+    void fill_unused_chars(GpsLiquidCrystal& dsp, uint8_t count)
+    {
+        for (uint8_t i = 0; i < count; i++)
         {
           dsp.print(SAT_INFO_UNUSED_CHAR);
         }
-        _sat_info_count = 0;
-      }
     }
 
     uint8_t to_bar_value(uint8_t snr)

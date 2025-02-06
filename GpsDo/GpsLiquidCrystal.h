@@ -159,7 +159,12 @@ public:
         i++;
       }
     }
-    return write(str, (size_t)i);
+    uint8_t bytes_written = write(str, (size_t)i);
+    while (bytes_written < len) {
+      write(' ');
+      bytes_written++;
+    }
+    return bytes_written;
   }
 };
 

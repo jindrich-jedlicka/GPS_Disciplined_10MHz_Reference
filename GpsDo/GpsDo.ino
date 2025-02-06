@@ -3,6 +3,24 @@
 #include <RotaryEncoder.h>
 #include "GpsLiquidCrystal.h"
 #include "GpsView.h"
+#include "SateliteInfoView.h"
+
+//--------------------
+// Check configuration
+
+#ifndef NMEAGPS_PARSE_GSV
+  #error You must define NMEAGPS_PARSE_GSV in NMEAGPS_cfg.h!
+#endif
+
+#ifndef NMEAGPS_PARSE_SATELLITES
+  #error You must define NMEAGPS_PARSE_SATELLITE in NMEAGPS_cfg.h!
+#endif
+
+#ifndef NMEAGPS_PARSE_SATELLITE_INFO
+  #error You must define NMEAGPS_PARSE_SATELLITE_INFO in NMEAGPS_cfg.h!
+#endif
+
+//--------------------
 
 static GpsLiquidCrystal lcd;
 
