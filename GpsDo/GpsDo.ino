@@ -36,6 +36,7 @@ static NMEAGPS nmeaGps;
 static int pos = 0;
 
 static GpsView gpsView;
+static SateliteInfoView satView;
 
 void setup()
 {

@@ -136,6 +136,14 @@ public:
     return write(val);
   }
 
+  uint8_t print_n_char(const uint8_t len, const char char_to_fill)
+  {
+    for (uint8_t i = 0; i < len; i++) {
+      print(char_to_fill);
+    }
+    return len;
+  }
+
   uint8_t print_dec_number(uint16_t n, const uint8_t len, const char prefix_char = '\0')
   {
     if (len == 0)
