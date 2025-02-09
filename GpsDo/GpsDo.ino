@@ -89,15 +89,19 @@ void loop()
     {
       gpsView.display_data(lcd, nmeaGps);
     }
-    else
+    else 
     {
-      const NMEAGPS::satellite_view_t *p_satelite_data = NULL;
-      uint8_t sat_index = (uint8_t)index - 1;
+      const gps_fix& fix = nmeaGps.read();
+      if (nmeaGps.satellites_valid())
+      {
+        NMEAGPS::satellite_view_t *p_satelite_data = NULL;
+        uint8_t sat_index = (uint8_t)index - 1;
 
-      if (sat_index < nmeaGps.sat_count)
-        p_satelite_data = &nmeaGps.satellites[sat_index];
+        if (sat_index < nmeaGps.sat_count)
+          p_satelite_data = &(nmeaGps.satellites[sat_index]);
 
-      satView.display_data(lcd, index, p_satelite_data);
+        satView.display_data(lcd, index, p_satelite_data);
+      }
     }
   }  
 //  if (gpsSerial.available())

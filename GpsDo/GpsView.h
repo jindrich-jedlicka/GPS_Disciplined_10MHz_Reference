@@ -133,7 +133,6 @@ private:
     {      
       const uint8_t maxSatelites = DISP_COLS - SAT_INFO_COL;
       dsp.setCursor(SAT_INFO_COL, SAT_INFO_ROW);
-
       if (nmeaGps.satellites_valid())
       {
         int count = nmeaGps.sat_count;

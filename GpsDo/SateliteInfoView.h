@@ -6,7 +6,7 @@
 
 #define MASK_FIRST_ROW  "   ID       dBHz"
 #define MASK_SECOND_ROW "ELV   AZM    deg"
-#define INVALID_VAL_CHAR '*'
+#define INVALID_VAL_CHAR '?'
 
 #define INDEX_ROW 0
 #define INDEX_COL 0
@@ -21,12 +21,12 @@
 #define SNR_LEN 2
 
 #define ELV_ROW 1
-#define ELV_COL 0
+#define ELV_COL 3
 #define ELV_LEN 2
 
 #define AZM_ROW ELV_ROW
-#define AZM_COL 0
-#define AZM_LEN 9
+#define AZM_COL 9
+#define AZM_LEN 3
 
 class SateliteInfoView
 {
@@ -56,13 +56,12 @@ public:
         return;
       forceUpdate = true;
     }
-    else if (p_satelite_data == NULL) {      
+    else if (p_satelite_data == NULL) {   
       print_invalid_data(dsp);
       _satelite_data.id = INVALID_ID;
       return;
     }
     print_data(dsp, *p_satelite_data, forceUpdate);
-    _satelite_data = *p_satelite_data;
   }
 
   void clear()
@@ -100,6 +99,7 @@ private:
     {
       dsp.setCursor(ID_COL, ID_ROW);
       dsp.print_dec_number(data.id, ID_LEN);
+      _satelite_data.id = data.id;
     }
     if (data.tracked)
     {
@@ -107,34 +107,41 @@ private:
       {
         dsp.setCursor(SNR_COL, SNR_ROW);
         dsp.print_dec_number(data.snr, SNR_LEN);
+        _satelite_data.snr = data.snr;
       }
       if (forceUpdate || data.elevation != _satelite_data.elevation)
       {
         dsp.setCursor(ELV_COL, ELV_ROW);
         dsp.print_dec_number(data.elevation, ELV_LEN);
+        _satelite_data.elevation = data.elevation;
       }
       if (forceUpdate || data.azimuth != _satelite_data.azimuth)
       {
         dsp.setCursor(AZM_COL, AZM_ROW);
         dsp.print_dec_number(data.azimuth, AZM_LEN);
+        _satelite_data.azimuth = data.azimuth;
       }
     }
     else if (forceUpdate || _satelite_data.tracked)
     {
       print_untracked_data(dsp);
     }
+    _satelite_data.tracked = data.tracked;
   }
 
   void print_untracked_data(GpsLiquidCrystal& dsp)
   {
     dsp.setCursor(SNR_COL, SNR_ROW);
     dsp.print_n_char(SNR_LEN, INVALID_VAL_CHAR);
+    _satelite_data.snr = INVALID_SNR;
 
     dsp.setCursor(ELV_COL, ELV_ROW);
     dsp.print_n_char(ELV_LEN, INVALID_VAL_CHAR);
+    _satelite_data.elevation = INVALID_ELV;
 
     dsp.setCursor(AZM_COL, AZM_ROW);
     dsp.print_n_char(AZM_LEN, INVALID_VAL_CHAR);
+    _satelite_data.azimuth = INVALID_AZM;
   }
 
   void print_invalid_data(GpsLiquidCrystal& dsp)
@@ -152,6 +159,9 @@ private:
 
   const uint8_t INVALID_ID = 0xFF;  
   const uint8_t INVALID_INDEX = 0xFF;  
+  const uint8_t INVALID_SNR = 0xFF;  
+  const uint8_t INVALID_ELV = 0xFF;  
+  const uint8_t INVALID_AZM = 0xFFFF;  
 };
 
 #endif // _SATELITE_INFO_VIEW
