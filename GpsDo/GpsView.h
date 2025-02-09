@@ -22,7 +22,7 @@
 #define SAT_INFO_UNUSED_CHAR ' '
 #define SAT_INFO_UNTRACKED_CHAR 'x'
 
-#include <NMEAGPS.h>
+#include "SateliteData.h"
 #include "GpsLiquidCrystal.h"
 
 class GpsView
@@ -34,19 +34,17 @@ public:
   }
 
 public:
-  void display_data(GpsLiquidCrystal& dsp, const NMEAGPS& nmeaGps)
+  void display_data(GpsLiquidCrystal& dsp, const SateliteData& gpsData)
   {
-    const gps_fix& fix = nmeaGps.read();
-
     if (!_initialized)
     {
       init(dsp);
       _initialized = true;
     }
 
-    display_satelites_info(dsp, nmeaGps);
-    display_time(dsp, fix);
-    display_sat(dsp, fix.satellites);
+    display_satelites_info(dsp, gpsData);
+    display_time(dsp, gpsData.get_fix());
+    display_sat(dsp, gpsData.get_fix().satellites);
   }
 
   void clear()
@@ -129,19 +127,19 @@ private:
   }
 
 private:
-    void display_satelites_info(GpsLiquidCrystal& dsp, const NMEAGPS& nmeaGps)
+    void display_satelites_info(GpsLiquidCrystal& dsp, const SateliteData& gpsData)
     {      
       const uint8_t maxSatelites = DISP_COLS - SAT_INFO_COL;
       dsp.setCursor(SAT_INFO_COL, SAT_INFO_ROW);
-      if (nmeaGps.satellites_valid())
+      if (gpsData.satellites_valid())
       {
-        int count = nmeaGps.sat_count;
+        int count = gpsData.get_sat_count();
         if (maxSatelites < count)
           count = maxSatelites;
 
         for (uint8_t i = 0; i < count; i++)
         {
-          const NMEAGPS::satellite_view_t& sat = nmeaGps.satellites[i];
+          const NMEAGPS::satellite_view_t& sat = gpsData.get_satelite_view(i);
           
           if (sat.tracked)
             dsp.print_bar_val(to_bar_value(sat.snr));

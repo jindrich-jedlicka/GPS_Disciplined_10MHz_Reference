@@ -4,6 +4,7 @@
 #include "GpsLiquidCrystal.h"
 #include "GpsView.h"
 #include "SateliteInfoView.h"
+#include "SateliteData.h"
 
 //--------------------
 // Check configuration
@@ -40,6 +41,7 @@ static int index = 0;
 
 static GpsView gpsView;
 static SateliteInfoView satView;
+static SateliteData gpsData;
 
 void setup()
 {
@@ -80,30 +82,33 @@ ISR(PCINT2_vect)
 
 char readChar;
 
+bool data_available()
+{
+    update_index();
+    while (gpsSerial.available())
+    {
+      nmeaGps.handle( gpsSerial.read() );
+      update_index();
+    }
+    return nmeaGps.available();
+}
+
 void loop()
 {
-  update_index();
-  while (nmeaGps.available(gpsSerial)) 
+  while (data_available()) 
   {
+    gpsData.set_data(nmeaGps);
+
     if (index == 0)
     {
-      gpsView.display_data(lcd, nmeaGps);
+      gpsView.display_data(lcd, gpsData);
     }
     else 
     {
-      const gps_fix& fix = nmeaGps.read();
-      if (nmeaGps.satellites_valid())
-      {
-        NMEAGPS::satellite_view_t *p_satelite_data = NULL;
-        uint8_t sat_index = (uint8_t)index - 1;
-
-        if (sat_index < nmeaGps.sat_count)
-          p_satelite_data = &(nmeaGps.satellites[sat_index]);
-
-        satView.display_data(lcd, index, p_satelite_data);
-      }
+      satView.display_data(lcd, index, gpsData);
     }
   }  
+  update_index();
 //  if (gpsSerial.available())
 //  {
 //    readChar = gpsSerial.read();
@@ -135,9 +140,23 @@ void update_index()
     if (prevIndex != index)
     {
       if (index == 0)
+      {
         gpsView.clear();
-      else if (prevIndex == 0)      
+      }
+      else if (prevIndex == 0)
+      {
         satView.clear();
+      }        
+      if (index == 0)
+      {
+        if (gpsData.is_data_set())
+          gpsView.display_data(lcd, gpsData);
+      }
+      else
+      {
+        if (gpsData.is_data_set())
+          satView.display_data(lcd, index, gpsData);
+      }        
     }
     pos = newPos;    
   }  

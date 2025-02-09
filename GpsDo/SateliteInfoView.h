@@ -37,6 +37,17 @@ public:
   }
 
 public:
+  void display_data(GpsLiquidCrystal& dsp, uint8_t index, const SateliteData& gpsData)
+  {
+    NMEAGPS::satellite_view_t *p_satelite_data = NULL;
+    uint8_t sat_index = (uint8_t)index - 1;
+
+    if (gpsData.satellites_valid() && sat_index < gpsData.get_sat_count())
+      p_satelite_data = &gpsData.get_satelite_view(sat_index);
+
+    display_data(dsp, index, p_satelite_data);
+  }
+
   void display_data(GpsLiquidCrystal& dsp, uint8_t index, const NMEAGPS::satellite_view_t* p_satelite_data)
   {
     if (!_initialized)
