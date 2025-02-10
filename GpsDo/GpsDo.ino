@@ -149,7 +149,7 @@ void update_index()
         set_active_view(&satView);
 
       if (gpsData.is_data_set())
-        activeView->display_data(lcd, 0, gpsData);
+        activeView->display_data(lcd, index, gpsData);
     }
     pos = newPos;    
   }  

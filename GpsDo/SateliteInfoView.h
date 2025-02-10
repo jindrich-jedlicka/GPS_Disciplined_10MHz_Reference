@@ -68,6 +68,7 @@ protected:
 private:
   void display_unknown_data(GpsLiquidCrystal& dsp, uint8_t index)
   {
+    print_index(dsp, index);
     if (_satelite_data.id != INVALID_ID) 
     {
       print_invalid_data(dsp);
