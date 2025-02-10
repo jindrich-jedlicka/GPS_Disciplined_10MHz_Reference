@@ -1,6 +1,8 @@
 #ifndef _GPS_VIEW
 #define _GPS_VIEW
 
+#include "View.h"
+
 #define STR_LEN(x) ((sizeof(x) / sizeof(char)) - 1)
 
 #define TIME_ROW 0
@@ -22,47 +24,41 @@
 #define SAT_INFO_UNUSED_CHAR ' '
 #define SAT_INFO_UNTRACKED_CHAR 'x'
 
-#include "SateliteData.h"
-#include "GpsLiquidCrystal.h"
+#define INVALID_VAL 0xFF
 
-class GpsView
+class GpsView : public View
 {
 public:
   GpsView()
   {
-    clear();
-  }
-
-public:
-  void display_data(GpsLiquidCrystal& dsp, const SateliteData& gpsData)
-  {
-    if (!_initialized)
-    {
-      init(dsp);
-      _initialized = true;
-    }
-
-    display_satelites_info(dsp, gpsData);
-    display_time(dsp, gpsData.get_fix());
-    display_sat(dsp, gpsData.get_fix().satellites);
-  }
-
-  void clear()
-  {
     init_time_values();
     _sat_count = INVALID_VAL;
     _sat_info_count = 0;
-    _initialized = false;
   }
 
-private:
-  void init(GpsLiquidCrystal& dsp)
+protected:
+  virtual void on_init(GpsLiquidCrystal& dsp)
   {
     dsp.clear();
     display_unknown_time(dsp);
     display_unknown_sat(dsp);
   }
 
+  virtual void on_display_data(GpsLiquidCrystal& dsp, uint8_t index, const SateliteData& gpsData)
+  {
+    display_satelites_info(dsp, gpsData);
+    display_time(dsp, gpsData.get_fix());
+    display_sat(dsp, gpsData.get_fix().satellites);
+  }
+
+  virtual void on_clear()
+  {
+    init_time_values();
+    _sat_count = INVALID_VAL;
+    _sat_info_count = 0;
+  }
+
+private:
   void display_time(GpsLiquidCrystal& dsp, const gps_fix& fix)
   {
     if (fix.valid.time) 
@@ -179,15 +175,12 @@ private:
     }
 
 private:
-  bool _initialized;
   uint8_t _sec;
   uint8_t _minute;
   uint8_t _hour;
 
   uint8_t _sat_count;
   uint8_t _sat_info_count;
-
-  const uint8_t INVALID_VAL = 0xFF;
 };
 
 #endif // _GPS_VIEW

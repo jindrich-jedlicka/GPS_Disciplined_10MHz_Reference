@@ -1,8 +1,7 @@
 #ifndef _SATELITE_INFO_VIEW
 #define _SATELITE_INFO_VIEW
 
-#include <NMEAGPS.h>
-#include "GpsLiquidCrystal.h"
+#include "View.h"
 
 #define MASK_FIRST_ROW  "   ID       dBHz"
 #define MASK_SECOND_ROW "ELV   AZM    deg"
@@ -28,61 +27,60 @@
 #define AZM_COL 9
 #define AZM_LEN 3
 
-class SateliteInfoView
+#define INVALID_ID 0xFF
+#define INVALID_INDEX 0xFF
+#define INVALID_SNR 0xFF  
+#define INVALID_ELV 0xFF 
+#define INVALID_AZM 0xFFFF
+
+class SateliteInfoView : public View
 {
 public:
   SateliteInfoView()
   {
-    clear();
+    _index = INVALID_INDEX;
+    _satelite_data.id = INVALID_ID;
   }
 
-public:
-  void display_data(GpsLiquidCrystal& dsp, uint8_t index, const SateliteData& gpsData)
+protected:
+  virtual void on_init(GpsLiquidCrystal& dsp)
   {
-    NMEAGPS::satellite_view_t *p_satelite_data = NULL;
-    uint8_t sat_index = (uint8_t)index - 1;
+      init(dsp);
+      print_invalid_data(dsp);
+  }
+
+  virtual void on_display_data(GpsLiquidCrystal& dsp, uint8_t index, const SateliteData& gpsData)
+  {
+    uint8_t sat_index = index - 1;
 
     if (gpsData.satellites_valid() && sat_index < gpsData.get_sat_count())
-      p_satelite_data = &gpsData.get_satelite_view(sat_index);
-
-    display_data(dsp, index, p_satelite_data);
+      display_valid_data(dsp, index, gpsData.get_satelite_view(sat_index));
+    else
+      display_unknown_data(dsp, index);
   }
 
-  void display_data(GpsLiquidCrystal& dsp, uint8_t index, const NMEAGPS::satellite_view_t* p_satelite_data)
-  {
-    if (!_initialized)
-    {
-      init(dsp);
-      if (p_satelite_data == NULL)
-        print_invalid_data(dsp);
-
-      _initialized = true;
-    }
-
-    bool forceUpdate = false;
-    print_index(dsp, index);
-
-    if (_satelite_data.id == INVALID_ID) {
-      if (p_satelite_data == NULL)
-        return;
-      forceUpdate = true;
-    }
-    else if (p_satelite_data == NULL) {   
-      print_invalid_data(dsp);
-      _satelite_data.id = INVALID_ID;
-      return;
-    }
-    print_data(dsp, *p_satelite_data, forceUpdate);
-  }
-
-  void clear()
+  virtual void on_clear()
   {
     _index = INVALID_INDEX;
     _satelite_data.id = INVALID_ID;
-    _initialized = false;
   }
 
 private:
+  void display_unknown_data(GpsLiquidCrystal& dsp, uint8_t index)
+  {
+    if (_satelite_data.id != INVALID_ID) 
+    {
+      print_invalid_data(dsp);
+      _satelite_data.id = INVALID_ID;
+    }
+  }
+
+  void display_valid_data(GpsLiquidCrystal& dsp, uint8_t index, const NMEAGPS::satellite_view_t& satelite_data)
+  {
+    print_index(dsp, index);
+    print_data(dsp, satelite_data, _satelite_data.id == INVALID_ID);
+  }
+
   void init(GpsLiquidCrystal& dsp)
   {
     dsp.clear();
@@ -166,13 +164,6 @@ private:
 private:
   uint8_t _index;
   NMEAGPS::satellite_view_t _satelite_data;
-  bool _initialized;
-
-  const uint8_t INVALID_ID = 0xFF;  
-  const uint8_t INVALID_INDEX = 0xFF;  
-  const uint8_t INVALID_SNR = 0xFF;  
-  const uint8_t INVALID_ELV = 0xFF;  
-  const uint8_t INVALID_AZM = 0xFFFF;  
 };
 
 #endif // _SATELITE_INFO_VIEW

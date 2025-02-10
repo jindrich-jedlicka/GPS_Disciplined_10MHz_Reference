@@ -41,6 +41,7 @@ static int index = 0;
 
 static GpsView gpsView;
 static SateliteInfoView satView;
+static View *activeView = NULL;
 static SateliteData gpsData;
 
 void setup()
@@ -62,6 +63,8 @@ void setup()
 
   gpsSerial.begin(9600);
   Serial.begin(9600);
+
+  set_active_view(&gpsView);
 }
 
 ISR(PCINT0_vect)
@@ -98,15 +101,8 @@ void loop()
   while (data_available()) 
   {
     gpsData.set_data(nmeaGps);
-
-    if (index == 0)
-    {
-      gpsView.display_data(lcd, gpsData);
-    }
-    else 
-    {
-      satView.display_data(lcd, index, gpsData);
-    }
+    if (activeView != NULL)
+      activeView->display_data(lcd, index, gpsData);
   }  
   update_index();
 //  if (gpsSerial.available())
@@ -125,6 +121,14 @@ void loop()
   }
 }
 
+void set_active_view(View *view)
+{
+  activeView = view;
+
+  if (activeView != NULL)
+    activeView->clear();
+}
+
 void update_index()
 {
   int newPos = encoder.getPosition();
@@ -140,23 +144,12 @@ void update_index()
     if (prevIndex != index)
     {
       if (index == 0)
-      {
-        gpsView.clear();
-      }
+        set_active_view(&gpsView);
       else if (prevIndex == 0)
-      {
-        satView.clear();
-      }        
-      if (index == 0)
-      {
-        if (gpsData.is_data_set())
-          gpsView.display_data(lcd, gpsData);
-      }
-      else
-      {
-        if (gpsData.is_data_set())
-          satView.display_data(lcd, index, gpsData);
-      }        
+        set_active_view(&satView);
+
+      if (gpsData.is_data_set())
+        activeView->display_data(lcd, 0, gpsData);
     }
     pos = newPos;    
   }  
