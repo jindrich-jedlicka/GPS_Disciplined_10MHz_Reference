@@ -6,6 +6,7 @@
 #include "SateliteInfoView.h"
 #include "SateliteData.h"
 #include "GpsMonitor.h"
+#include "RuntimeContext.h"
 
 //--------------------
 // Check configuration
@@ -23,8 +24,6 @@
 #endif
 
 //--------------------
-
-#define MAX_INDEX NMEAGPS_MAX_SATELLITES + 1
 
 static GpsLiquidCrystal lcd;
 
