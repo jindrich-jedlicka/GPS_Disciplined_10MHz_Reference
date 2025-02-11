@@ -25,8 +25,6 @@ public:
   inline uint8_t get_sat_count() const { return _sat_count; }
   inline const NMEAGPS::satellite_view_t& get_satelite_view(uint8_t index) const { return _satellites[index]; }
   bool satellites_valid() const { return (_sat_count >= _fix.satellites); }
-
-private:
   void clear()
   {
     _fix.init();

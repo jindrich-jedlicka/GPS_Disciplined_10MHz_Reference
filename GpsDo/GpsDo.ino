@@ -5,6 +5,7 @@
 #include "GpsView.h"
 #include "SateliteInfoView.h"
 #include "SateliteData.h"
+#include "GpsMonitor.h"
 
 //--------------------
 // Check configuration
@@ -29,21 +30,23 @@ static GpsLiquidCrystal lcd;
 
 #define PIN_IN1 A3
 #define PIN_IN2 A2
+static int pos = 0;
 static RotaryEncoder encoder(PIN_IN1, PIN_IN2, RotaryEncoder::LatchMode::FOUR3);
 
 #define PIN_RX 2
 #define PIN_TX 3
 static NeoSWSerial gpsSerial(PIN_RX, PIN_TX);
 
+static GpsMonitor gpsMonitor;
+/*
 static NMEAGPS nmeaGps;
-static int pos = 0;
 static int index = 0;
 
 static GpsView gpsView;
 static SateliteInfoView satView;
 static View *activeView = NULL;
 static SateliteData gpsData;
-
+*/
 void setup()
 {
   lcd.begin();
@@ -64,7 +67,7 @@ void setup()
   gpsSerial.begin(9600);
   Serial.begin(9600);
 
-  set_active_view(&gpsView);
+  gpsMonitor.begin();
 }
 
 ISR(PCINT0_vect)
@@ -84,7 +87,7 @@ ISR(PCINT2_vect)
 }
 
 char readChar;
-
+/*
 bool data_available()
 {
     update_index();
@@ -95,15 +98,21 @@ bool data_available()
     }
     return nmeaGps.available();
 }
-
+*/
 void loop()
 {
-  while (data_available()) 
+  while (gpsSerial.available())
+  {
+    gpsMonitor.handle( gpsSerial.read() );
+    update_index();
+  }
+  gpsMonitor.data_transfer_completed(lcd);
+/*  while (data_available()) 
   {
     gpsData.set_data(nmeaGps);
     if (activeView != NULL)
       activeView->display_data(lcd, index, gpsData);
-  }  
+  }  */
   update_index();
 //  if (gpsSerial.available())
 //  {
@@ -111,7 +120,7 @@ void loop()
 //    Serial.write(readChar);
 //    //gpsParser.encode(readChar);
 //  }
-  
+  /*
   if (Serial.available() > 0)
   {
     readChar = Serial.read(); 
@@ -119,22 +128,24 @@ void loop()
 //    lcd.print(readChar, HEX);
     gpsSerial.write(readChar);
   }
+  */
 }
 
-void set_active_view(View *view)
+/*void set_active_view(View *view)
 {
   activeView = view;
 
   if (activeView != NULL)
     activeView->clear();
 }
-
+*/
 void update_index()
 {
   int newPos = encoder.getPosition();
   if (newPos != pos)
   {    
-    int prevIndex = index;
+    gpsMonitor.try_move_index(lcd, newPos - pos);
+  /*  int prevIndex = index;
     index += newPos - pos;
     if (index < 0)
       index = 0;
@@ -150,7 +161,7 @@ void update_index()
 
       if (gpsData.is_data_set())
         activeView->display_data(lcd, index, gpsData);
-    }
+    }*/
     pos = newPos;    
   }  
  }
