@@ -103,7 +103,7 @@ void loop()
 {
   while (gpsSerial.available())
   {
-    gpsMonitor.handle( gpsSerial.read() );
+    gpsMonitor.char_received( gpsSerial.read() );
     update_index();
   }
   gpsMonitor.data_transfer_completed(lcd);
@@ -144,7 +144,7 @@ void update_index()
   int newPos = encoder.getPosition();
   if (newPos != pos)
   {    
-    gpsMonitor.try_move_index(lcd, newPos - pos);
+    gpsMonitor.encoder_moved(lcd, newPos - pos);
   /*  int prevIndex = index;
     index += newPos - pos;
     if (index < 0)

@@ -28,7 +28,7 @@ public:
     _nmeaGps.reset();
   }
 
-  inline NMEAGPS::decode_t handle( uint8_t c ) { return _nmeaGps.handle(c); }
+  inline void char_received( uint8_t c ) { _nmeaGps.handle(c); }
 
   void data_transfer_completed(GpsLiquidCrystal& dsp)
   {
@@ -50,7 +50,7 @@ public:
     }
   }
 
-  void try_move_index(GpsLiquidCrystal& dsp, int8_t delta)
+  void encoder_moved(GpsLiquidCrystal& dsp, int8_t delta)
   {
     int16_t tmp = _index + delta;
     if (tmp < 0)
