@@ -16,38 +16,42 @@ class RuntimeContext
 public:
   static void setup()
   {
-    dsp.begin();
-    gpsSerial.begin(9600);
+    _dsp.begin();
+    _gpsSerial.begin(9600);
     Serial.begin(9600);
-    encoder.tick(); 
+
+    _encoder_pos = 0;
+    _encoder.setPosition(_encoder_pos);
+    _encoder.tick(); 
   }
 
   static int get_encoder_delta()
   {
     int delta = 0;
-    int newPos = encoder.getPosition();
-    if (newPos != encoder_pos)
+    int newPos = _encoder.getPosition();
+    if (newPos != _encoder_pos)
     {    
-      delta = newPos - encoder_pos;
-      encoder_pos = newPos;    
+      delta = newPos - _encoder_pos;
+      _encoder_pos = newPos;    
     }  
     return delta;
   }
 
-  static inline void encoder_tick() { encoder.tick(); }
-  static inline GpsLiquidCrystal& get_display() { return dsp; }
-  static inline Stream& get_gps_stream() { return gpsSerial; }
+  static inline void encoder_tick() { _encoder.tick(); }
+  static inline GpsLiquidCrystal& get_display() { return _dsp; }
+  static inline Stream& get_gps_stream() { return _gpsSerial; }
   static inline Stream& get_pc_stream() { return Serial; }
 
 private:
-  static GpsLiquidCrystal dsp;
-  static int encoder_pos;
-  static RotaryEncoder encoder;
-  static NeoSWSerial gpsSerial;
+  static GpsLiquidCrystal _dsp;
+  static int _encoder_pos;
+  static RotaryEncoder _encoder;
+  static NeoSWSerial _gpsSerial;
 };
 
-static RotaryEncoder RuntimeContext::encoder(_PIN_IN1, _PIN_IN2, RotaryEncoder::LatchMode::FOUR3);
-static int RuntimeContext::encoder_pos = 0;
-static NeoSWSerial RuntimeContext::gpsSerial(_PIN_RX, _PIN_TX);
+static GpsLiquidCrystal RuntimeContext::_dsp;
+static RotaryEncoder RuntimeContext::_encoder(_PIN_IN1, _PIN_IN2, RotaryEncoder::LatchMode::FOUR3);
+static int RuntimeContext::_encoder_pos = 0;
+static NeoSWSerial RuntimeContext::_gpsSerial(_PIN_RX, _PIN_TX);
 
 #endif

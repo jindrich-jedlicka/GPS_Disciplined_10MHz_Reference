@@ -1,39 +1,25 @@
 #ifndef _RUNTIME_MODULE
 #define _RUNTIME_MODULE
 
-class RuntimeContext;
+typedef enum MODULE_TYPE
+{
+  MODULE_TYPE_NONE,
+  MODULE_TYPE_MENU,
+  MODULE_TYPE_UPLOAD_CONFIG,
+  MODULE_TYPE_GPS_MONITOR,
+  MODULE_TYPE_GPS_DIAG,
+} MODULE_TYPE;
 
 class RuntimeModule
 {
 public:
   RuntimeModule()
   {
-    _pContext = NULL;
   }
 
 public:
-  void begin(RuntimeContext& context)
-  {
-
-  }
-
-  void loop()
-  {
-
-  }
-
-  void end()
-  {
-    _pContext = NULL;
-  }
-
-protected:
-  virtual void on_begin(RuntimeContext& context) = 0;
-  virtual void on_loop() = 0;
-  virtual void on_end() = 0;
-
-private:
-  RuntimeContext* _pContext;
+  virtual void begin() = 0;
+  virtual MODULE_TYPE loop() = 0;
 };
 
 #endif

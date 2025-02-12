@@ -7,6 +7,7 @@
 #include "SateliteData.h"
 #include "GpsMonitor.h"
 #include "RuntimeContext.h"
+#include "ModuleManager.h"
 
 //--------------------
 // Check configuration
@@ -25,6 +26,8 @@
 
 //--------------------
 
+static ModuleManager modules;
+/*
 static GpsLiquidCrystal lcd;
 
 #define PIN_IN1 A3
@@ -37,6 +40,7 @@ static RotaryEncoder encoder(PIN_IN1, PIN_IN2, RotaryEncoder::LatchMode::FOUR3);
 static NeoSWSerial gpsSerial(PIN_RX, PIN_TX);
 
 static GpsMonitor gpsMonitor;
+*/
 /*
 static NMEAGPS nmeaGps;
 static int index = 0;
@@ -48,7 +52,7 @@ static SateliteData gpsData;
 */
 void setup()
 {
-  lcd.begin();
+  //lcd.begin();
   //defining pins if they are INPUT or OUTPUT pins
   //  pinMode(start_pin, INPUT);
   //  pinMode(stop1_pin, INPUT);
@@ -56,7 +60,7 @@ void setup()
 
   PCICR |= (1 << PCIE1);
   PCMSK1 |= (1 << PCINT10) | (1 << PCINT11);
-
+/*
   lcd.setCursor(0, 0);
   lcd.print("Neo-8M GPS DO ");
   lcd.setCursor(0, 1);
@@ -67,6 +71,10 @@ void setup()
   Serial.begin(9600);
 
   gpsMonitor.begin();
+*/
+  //////////////////////////////
+  RuntimeContext::setup();
+  modules.setup();
 }
 
 ISR(PCINT0_vect)
@@ -77,16 +85,17 @@ ISR(PCINT0_vect)
 ISR(PCINT1_vect)
 {
   NeoSWSerial::rxISR(PINC);
-  encoder.tick(); // just call tick() to check the state.
+  RuntimeContext::encoder_tick();
+  //encoder.tick(); // just call tick() to check the state.
 }
 
 ISR(PCINT2_vect)
 {
   NeoSWSerial::rxISR(PIND);
 }
-
-char readChar;
 /*
+char readChar;
+
 bool data_available()
 {
     update_index();
@@ -100,19 +109,21 @@ bool data_available()
 */
 void loop()
 {
+  modules.loop();
+/*
   while (gpsSerial.available())
   {
     gpsMonitor.char_received( gpsSerial.read() );
     update_index();
   }
   gpsMonitor.data_transfer_completed(lcd);
-/*  while (data_available()) 
+  while (data_available()) 
   {
     gpsData.set_data(nmeaGps);
     if (activeView != NULL)
       activeView->display_data(lcd, index, gpsData);
-  }  */
-  update_index();
+  }  
+  update_index();*/
 //  if (gpsSerial.available())
 //  {
 //    readChar = gpsSerial.read();
@@ -137,7 +148,7 @@ void loop()
   if (activeView != NULL)
     activeView->clear();
 }
-*/
+
 void update_index()
 {
   int newPos = encoder.getPosition();
@@ -160,7 +171,7 @@ void update_index()
 
       if (gpsData.is_data_set())
         activeView->display_data(lcd, index, gpsData);
-    }*/
+    }
     pos = newPos;    
   }  
- }
+ }*/

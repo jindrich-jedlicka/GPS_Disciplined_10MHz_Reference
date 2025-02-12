@@ -1,23 +1,25 @@
-#ifndef _GPS_MONITOR
-#define _GPS_MONITOR
+#ifndef _GPS_MONITOR_RUNTIME_MODULE
+#define _GPS_MONITOR_RUNTIME_MODULE
 
 #include <NMEAGPS.h>
 #include "GpsView.h"
 #include "SateliteInfoView.h"
+#include "RuntimeModule.h"
+#include "RuntimeContext.h"
 
 #define MAX_INDEX NMEAGPS_MAX_SATELLITES
 
-class GpsMonitor
+class GpsMonitorRuntimeModule : public RuntimeModule
 {
 public:
-  GpsMonitor()
+  GpsMonitorRuntimeModule()
   {
     _activeView = NULL;
     _index = 0;
   }
 
 public:
-  void begin()
+  virtual void begin()
   {
     _satView.clear();
     _mainView.clear();
@@ -28,7 +30,26 @@ public:
     _nmeaGps.reset();
   }
 
-  inline void char_received( uint8_t c ) { _nmeaGps.handle(c); }
+  virtual MODULE_TYPE loop()
+  {
+    while (RuntimeContext::get_gps_stream().available())
+    {
+      _nmeaGps.handle(RuntimeContext::get_gps_stream().read());
+      check_encoder();
+    }
+    data_transfer_completed(RuntimeContext::get_display());
+    check_encoder();
+
+    return MODULE_TYPE_GPS_MONITOR;
+  }
+
+private:
+  void check_encoder()
+  {
+    int delta = RuntimeContext::get_encoder_delta();
+    if (0 < delta)
+      encoder_moved(RuntimeContext::get_display(), delta);
+  }
 
   void data_transfer_completed(GpsLiquidCrystal& dsp)
   {
@@ -50,9 +71,9 @@ public:
     }
   }
 
-  void encoder_moved(GpsLiquidCrystal& dsp, int8_t delta)
+  void encoder_moved(GpsLiquidCrystal& dsp, int delta)
   {
-    int16_t tmp = _index + delta;
+    int tmp = _index + delta;
     if (tmp < 0)
     {
       tmp = 0;
@@ -67,7 +88,6 @@ public:
     }
   }
   
-private:
   void set_new_index(GpsLiquidCrystal& dsp, int8_t newIndex)
   {
       if (_index == 0)
@@ -104,4 +124,4 @@ private:
   int8_t _index;
 };
 
-#endif // _GPS_MONITOR
+#endif // _GPS_MONITOR_RUNTIME_MODULE
