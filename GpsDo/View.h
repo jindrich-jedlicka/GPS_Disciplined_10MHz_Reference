@@ -17,7 +17,9 @@ public:
   {
     if (!_initialized)
     {
+      dsp.clear();
       on_init(dsp);
+      
       _initialized = true;
     }
     on_display_data(dsp, index, gpsData);

@@ -1,5 +1,5 @@
-#ifndef _GPS_VIEW
-#define _GPS_VIEW
+#ifndef _SATELLITES_VIEW
+#define _SATELLITES_VIEW
 
 #include "View.h"
 
@@ -26,10 +26,10 @@
 
 #define INVALID_VAL 0xFF
 
-class GpsView : public View
+class SatellitesView : public View
 {
 public:
-  GpsView()
+  SatellitesView()
   {
     init_time_values();
     _sat_count = INVALID_VAL;
@@ -39,7 +39,6 @@ public:
 protected:
   virtual void on_init(GpsLiquidCrystal& dsp)
   {
-    dsp.clear();
     display_unknown_time(dsp);
     display_unknown_sat(dsp);
   }
@@ -183,4 +182,4 @@ private:
   uint8_t _sat_info_count;
 };
 
-#endif // _GPS_VIEW
+#endif // _SATELLITES_VIEW

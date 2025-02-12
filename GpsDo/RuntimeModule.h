@@ -3,7 +3,6 @@
 
 typedef enum MODULE_TYPE
 {
-  MODULE_TYPE_NONE,
   MODULE_TYPE_MENU,
   MODULE_TYPE_UPLOAD_CONFIG,
   MODULE_TYPE_GPS_MONITOR,
@@ -18,7 +17,8 @@ public:
   }
 
 public:
-  virtual void begin() = 0;
+  virtual MODULE_TYPE get_type() = 0;
+  virtual void begin() = 0;  
   virtual MODULE_TYPE loop() = 0;
 };
 

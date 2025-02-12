@@ -2,7 +2,7 @@
 #define _GPS_MONITOR_RUNTIME_MODULE
 
 #include <NMEAGPS.h>
-#include "GpsView.h"
+#include "SatellitesView.h"
 #include "SateliteInfoView.h"
 #include "RuntimeModule.h"
 #include "RuntimeContext.h"
@@ -19,6 +19,8 @@ public:
   }
 
 public:
+  virtual MODULE_TYPE get_type() { return MODULE_TYPE_GPS_MONITOR; }
+
   virtual void begin()
   {
     _satView.clear();
@@ -119,7 +121,7 @@ private:
   NMEAGPS _nmeaGps;
   SateliteData _gpsData;
   View *_activeView;
-  GpsView _mainView;
+  SatellitesView _mainView;
   SateliteInfoView _satView;
   int8_t _index;
 };

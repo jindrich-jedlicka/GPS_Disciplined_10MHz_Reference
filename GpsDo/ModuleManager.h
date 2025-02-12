@@ -10,7 +10,6 @@ public:
   ModuleManager()
   {
     _pActiveModule = NULL;
-    _moduleType = MODULE_TYPE_NONE;
   }
 
 public:
@@ -30,17 +29,16 @@ public:
 private:
   void set_module(MODULE_TYPE moduleType)
   {
-      if (_moduleType != moduleType)
+    if (_pActiveModule == NULL || _pActiveModule->get_type() != moduleType)
+    {
+      _pActiveModule = get_module(moduleType);
+      if (_pActiveModule != NULL)
       {
-        _pActiveModule = get_module(moduleType);
-        if (_pActiveModule != NULL)
-        {
-          _pActiveModule->begin();
-        }
-        _moduleType = moduleType;
+        _pActiveModule->begin();
       }
-
+    }
   }
+  
   RuntimeModule* get_module(MODULE_TYPE moduleType)
   {
     switch(moduleType)
@@ -56,12 +54,9 @@ private:
   }
 
 private:
-  static GpsMonitorRuntimeModule _gpsModule;
+  GpsMonitorRuntimeModule _gpsModule;
 
   RuntimeModule* _pActiveModule;
-  MODULE_TYPE _moduleType;
 };
-
-static GpsMonitorRuntimeModule ModuleManager::_gpsModule;
 
 #endif // _MODULE_MANAGER

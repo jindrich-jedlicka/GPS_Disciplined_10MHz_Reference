@@ -45,7 +45,11 @@ public:
 protected:
   virtual void on_init(GpsLiquidCrystal& dsp)
   {
-      init(dsp);
+      dsp.setCursor(0, 0);
+      dsp.print(MASK_FIRST_ROW);
+      dsp.setCursor(0, 1);
+      dsp.print(MASK_SECOND_ROW);
+
       print_invalid_data(dsp);
   }
 
@@ -80,16 +84,6 @@ private:
   {
     print_index(dsp, index);
     print_data(dsp, satelite_data, _satelite_data.id == INVALID_ID);
-  }
-
-  void init(GpsLiquidCrystal& dsp)
-  {
-    dsp.clear();
-
-    dsp.setCursor(0, 0);
-    dsp.print(MASK_FIRST_ROW);
-    dsp.setCursor(0, 1);
-    dsp.print(MASK_SECOND_ROW);
   }
 
   void print_index(GpsLiquidCrystal& dsp, const uint8_t index)
