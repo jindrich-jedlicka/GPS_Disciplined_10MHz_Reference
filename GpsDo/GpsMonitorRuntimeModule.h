@@ -14,8 +14,7 @@ class GpsMonitorRuntimeModule : public RuntimeModule
 public:
   GpsMonitorRuntimeModule()
   {
-    _activeView = NULL;
-    _index = 0;
+    init();
   }
 
 public:
@@ -23,13 +22,8 @@ public:
 
   virtual void begin()
   {
-    _satView.clear();
-    _mainView.clear();
-    _gpsData.clear();
-
-    _index = 0;
-    _activeView = &_mainView;
-    _nmeaGps.reset();
+    init();
+    set_new_index(0);
   }
 
   virtual MODULE_TYPE loop()
@@ -39,41 +33,48 @@ public:
       _nmeaGps.handle(RuntimeContext::get_gps_stream().read());
       check_encoder();
     }
-    data_transfer_completed(RuntimeContext::get_display());
+    data_transfer_completed();
     check_encoder();
 
     return MODULE_TYPE_GPS_MONITOR;
   }
 
 private:
+  void init()
+  {
+    _activeView = NULL;
+    _index = -1;
+
+    _satView.clear();
+    _mainView.clear();
+    _gpsData.clear();
+    _nmeaGps.reset();
+  }
+
   void check_encoder()
   {
     int delta = RuntimeContext::get_encoder_delta();
-    if (0 < delta)
-      encoder_moved(RuntimeContext::get_display(), delta);
+    if (0 != delta)
+      encoder_moved(delta);
   }
 
-  void data_transfer_completed(GpsLiquidCrystal& dsp)
+  void data_transfer_completed()
   {
     if (_nmeaGps.available())
     {
       _gpsData.set_data(_nmeaGps);
 
       if (_activeView != NULL)
-        _activeView->display_data(dsp, _index, _gpsData);
+        _activeView->display_data(RuntimeContext::get_display(), _index, _gpsData);
     }
   }
 
-  void button_pushed(GpsLiquidCrystal& dsp)
+  void button_pushed()
   {
-    if (_index != 0)
-    {
-      set_new_index(dsp, 0);
-      _index = 0;
-    }
+    set_new_index(0);
   }
 
-  void encoder_moved(GpsLiquidCrystal& dsp, int delta)
+  void encoder_moved(int delta)
   {
     int tmp = _index + delta;
     if (tmp < 0)
@@ -84,14 +85,13 @@ private:
     {
       tmp = MAX_INDEX;
     }
-    if (_index != (int8_t)tmp)
-    {
-      set_new_index(dsp, (int8_t)tmp);
-    }
+    set_new_index((int8_t)tmp);
   }
   
-  void set_new_index(GpsLiquidCrystal& dsp, int8_t newIndex)
+  void set_new_index(int8_t newIndex)
   {
+    if (_index != newIndex)
+    {
       if (_index == 0)
         set_active_view(&_satView);
       else if (newIndex == 0)
@@ -100,7 +100,8 @@ private:
       _index = newIndex;
 
       if (_gpsData.is_data_set())
-        _activeView->display_data(dsp, _index, _gpsData);
+        _activeView->display_data(RuntimeContext::get_display(), _index, _gpsData);
+    }
   }
 
   void set_active_view(View *view)
@@ -120,9 +121,9 @@ private:
 private:
   NMEAGPS _nmeaGps;
   SateliteData _gpsData;
-  View *_activeView;
   SatellitesView _mainView;
   SateliteInfoView _satView;
+  View *_activeView;
   int8_t _index;
 };
 
