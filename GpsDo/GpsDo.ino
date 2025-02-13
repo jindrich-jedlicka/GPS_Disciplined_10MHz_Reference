@@ -22,11 +22,6 @@ static ModuleManager modules;
 
 void setup()
 {
-  //defining pins if they are INPUT or OUTPUT pins
-  //  pinMode(start_pin, INPUT);
-  //  pinMode(stop1_pin, INPUT);
-  //  pinMode(reset_pin, INPUT);
-
   PCICR |= (1 << PCIE1);
   PCMSK1 |= (1 << PCINT10) | (1 << PCINT11);
 /*

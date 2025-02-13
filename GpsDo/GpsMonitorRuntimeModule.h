@@ -53,9 +53,19 @@ private:
 
   void check_encoder()
   {
-    int delta = RuntimeContext::get_encoder_delta();
-    if (0 != delta)
-      encoder_moved(delta);
+    if (RuntimeContext::encoder_button_pressed())
+    {
+      RuntimeContext::get_encoder_delta(); // reset encoder movement
+      set_new_index(0);
+    }
+    else
+    {
+      int delta = RuntimeContext::get_encoder_delta();
+      if (0 != delta)
+      {
+        encoder_moved(delta);
+      }
+    }
   }
 
   void data_transfer_completed()
@@ -67,11 +77,6 @@ private:
       if (_activeView != NULL)
         _activeView->display_data(RuntimeContext::get_display(), _index, _gpsData);
     }
-  }
-
-  void button_pushed()
-  {
-    set_new_index(0);
   }
 
   void encoder_moved(int delta)
