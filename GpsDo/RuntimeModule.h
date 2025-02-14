@@ -1,9 +1,9 @@
 #ifndef _RUNTIME_MODULE
 #define _RUNTIME_MODULE
 
-typedef enum MODULE_TYPE
+typedef enum MODULE_TYPE : uint8_t
 {
-  MODULE_TYPE_MENU,
+  MODULE_TYPE_MENU = 0,
   MODULE_TYPE_UPLOAD_CONFIG,
   MODULE_TYPE_GPS_MONITOR,
   MODULE_TYPE_GPS_DIAG,
@@ -23,9 +23,15 @@ public:
   void begin()
   {
     _pos = -1;
+    _loop_return_val = get_type();
     on_init();
   }
-  virtual MODULE_TYPE loop() = 0;
+  MODULE_TYPE loop()
+  {
+    check_encoder();
+    on_loop();
+    return _loop_return_val;
+  }
 
 protected:
   void check_encoder()
@@ -56,15 +62,17 @@ protected:
     {
       tmp = _max_pos;
     }    
-    set_new_index((int8_t)tmp);
+    set_new_pos((int8_t)tmp);
   }
 
+  inline void set_next_module(MODULE_TYPE loop_return_val) { _loop_return_val = loop_return_val; }
   inline uint8_t get_encoder_pos() const { return _pos; }
   virtual void on_init() = 0;
+  virtual void on_loop() = 0;
   virtual void on_encoder_pressed() = 0;
   virtual void on_encoder_moved(uint8_t pos) = 0;
 
-  void set_new_index(int8_t new_pos)
+  void set_new_pos(int8_t new_pos)
   {
     if (_pos != new_pos)
     {
@@ -76,6 +84,7 @@ protected:
 private:
   uint8_t _max_pos;
   uint8_t _pos;
+  MODULE_TYPE _loop_return_val;
 };
 
 #endif

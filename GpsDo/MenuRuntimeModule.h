@@ -14,16 +14,15 @@ public:
 public:
   virtual MODULE_TYPE get_type() { return MODULE_TYPE_MENU; };
 
-  virtual MODULE_TYPE loop()
-  {
-    // TODO:
-    return MODULE_TYPE_MENU;
-  }
-
 protected:
   virtual void on_init()
   {
 
+  }
+
+  virtual void on_loop()
+  {
+    
   }
 
   virtual void on_encoder_pressed()
