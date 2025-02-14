@@ -3,23 +3,39 @@
 
 #include "RuntimeModule.h"
 
-
-
 class MenuRuntimeModule : public RuntimeModule
 {
 public:
-  virtual MODULE_TYPE get_type() { return MODULE_TYPE_MENU; };
-
-  virtual void begin()
+  MenuRuntimeModule() : RuntimeModule(5)
   {
-    // TODO:
-  } 
+
+  }
+
+public:
+  virtual MODULE_TYPE get_type() { return MODULE_TYPE_MENU; };
 
   virtual MODULE_TYPE loop()
   {
     // TODO:
     return MODULE_TYPE_MENU;
   }
+
+protected:
+  virtual void on_init()
+  {
+
+  }
+
+  virtual void on_encoder_pressed()
+  {
+
+  }
+
+  virtual void on_encoder_moved(uint8_t pos)
+  {
+
+  }
+
 
 private:
 

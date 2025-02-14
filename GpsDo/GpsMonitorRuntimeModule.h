@@ -12,19 +12,13 @@
 class GpsMonitorRuntimeModule : public RuntimeModule
 {
 public:
-  GpsMonitorRuntimeModule()
+  GpsMonitorRuntimeModule() : RuntimeModule(MAX_INDEX)
   {
     init();
   }
 
 public:
   virtual MODULE_TYPE get_type() { return MODULE_TYPE_GPS_MONITOR; }
-
-  virtual void begin()
-  {
-    init();
-    set_new_index(0);
-  }
 
   virtual MODULE_TYPE loop()
   {
@@ -39,33 +33,38 @@ public:
     return MODULE_TYPE_GPS_MONITOR;
   }
 
+protected:
+  virtual void on_init()
+  {
+    init();
+    set_new_index(0);
+  }
+
+  virtual void on_encoder_pressed()
+  {
+      set_new_index(0);
+  }
+
+  virtual void on_encoder_moved(uint8_t pos)
+  {
+      if (get_encoder_pos() == 0)
+        set_active_view(&_satView);
+      else if (pos == 0)
+        set_active_view(&_mainView);
+
+      if (_gpsData.is_data_set())
+        _activeView->display_data(RuntimeContext::get_display(), pos, _gpsData);
+  }
+
 private:
   void init()
   {
     _activeView = NULL;
-    _index = -1;
 
     _satView.clear();
     _mainView.clear();
     _gpsData.clear();
     _nmeaGps.reset();
-  }
-
-  void check_encoder()
-  {
-    if (RuntimeContext::encoder_button_pressed())
-    {
-      RuntimeContext::get_encoder_delta(); // reset encoder movement
-      set_new_index(0);
-    }
-    else
-    {
-      int delta = RuntimeContext::get_encoder_delta();
-      if (0 != delta)
-      {
-        encoder_moved(delta);
-      }
-    }
   }
 
   void data_transfer_completed()
@@ -75,37 +74,7 @@ private:
       _gpsData.set_data(_nmeaGps);
 
       if (_activeView != NULL)
-        _activeView->display_data(RuntimeContext::get_display(), _index, _gpsData);
-    }
-  }
-
-  void encoder_moved(int delta)
-  {
-    int tmp = _index + delta;
-    if (tmp < 0)
-    {
-      tmp = 0;
-    }
-    else if (MAX_INDEX < tmp)
-    {
-      tmp = MAX_INDEX;
-    }
-    set_new_index((int8_t)tmp);
-  }
-  
-  void set_new_index(int8_t newIndex)
-  {
-    if (_index != newIndex)
-    {
-      if (_index == 0)
-        set_active_view(&_satView);
-      else if (newIndex == 0)
-        set_active_view(&_mainView);
-
-      _index = newIndex;
-
-      if (_gpsData.is_data_set())
-        _activeView->display_data(RuntimeContext::get_display(), _index, _gpsData);
+        _activeView->display_data(RuntimeContext::get_display(), get_encoder_pos(), _gpsData);
     }
   }
 
@@ -129,7 +98,6 @@ private:
   SatellitesView _mainView;
   SateliteInfoView _satView;
   View *_activeView;
-  int8_t _index;
 };
 
 #endif // _GPS_MONITOR_RUNTIME_MODULE
