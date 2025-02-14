@@ -79,7 +79,7 @@ public:
 
     _encoder_pos = 0;
     _encoder_button.setup();
-    _encoder_button_pressed = false;
+    _encoder_button_pressed = _encoder_button.is_pressed();
     _encoder.setPosition(_encoder_pos);
     _encoder.tick(); 
   }

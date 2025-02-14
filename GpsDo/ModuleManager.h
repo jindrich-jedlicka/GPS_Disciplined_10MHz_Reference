@@ -3,6 +3,7 @@
 
 #include "RuntimeModule.h"
 #include "GpsMonitorRuntimeModule.h"
+#include "MenuRuntimeModule.h"
 
 class ModuleManager
 {
@@ -55,6 +56,7 @@ private:
 
 private:
   GpsMonitorRuntimeModule _gpsModule;
+  MenuRuntimeModule _menuModule;
 
   RuntimeModule* _pActiveModule;
 };
