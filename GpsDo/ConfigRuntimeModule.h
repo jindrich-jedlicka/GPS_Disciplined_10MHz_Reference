@@ -4,9 +4,42 @@
 #include "RuntimeModule.h"
 #include "RuntimeContext.h"
 
-static uint8_t sync_ubx_chars[] = {0xB5, 0x62};
+//////////////////////////////////////////////////////////////////////////////////
+// Categories
+#define CAT_CFG   0x06
+#define CAT_ACK   0x05
 
-static uint8_t nav_data[] = {0xFF, 0xFF, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x10, 0x27, 0x00, 0x00, 0x05, 0x00, 0xFA, 0x00, 0xFA, 0x00, 0x64, 0x00, 0x2C, 0x01, 0x00, 0x3C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+//////////////////////////////////////////////////////////////////////////////////
+// CAT_CFG
+#define CFG_NAV5  0x24
+
+//////////////////////////////////////////////////////////////////////////////////
+// CAT_ACK
+#define ACK_ACK   0x01 
+#define ACK_NACK  0x00 
+
+#define ACK_TIMEOUT_MS 3000
+
+typedef enum ACK_RESULT : uint8_t
+{
+  ACK_RESULT_TIMEOUT,
+  ACK_RESULT_FALSE,
+  ACK_RESULT_TRUE,
+} ACK_RESULT;
+
+typedef enum ACK_STATE : uint8_t
+{
+  ACK_STATE_NEW,
+  ACK_STATE_CLASS,
+  ACK_STATE_ACK,
+  ACK_STATE_ID_LEN,
+  ACK_STATE_ID,
+  ACK_STATE_CSUM,
+} ACK_STATE;
+
+const static uint8_t sync_ubx_chars[] = {0xB5, 0x62};
+
+const static uint8_t nav_data[] = {0xFF, 0xFF, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x10, 0x27, 0x00, 0x00, 0x05, 0x00, 0xFA, 0x00, 0xFA, 0x00, 0x64, 0x00, 0x2C, 0x01, 0x00, 0x3C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 typedef struct checksum_t
 {
@@ -57,13 +90,14 @@ public:
 protected:
   virtual void on_init()
   {
+    //TODO: use gps
     //_gps_stream = &RuntimeContext::get_gps_stream();
     _gps_stream = &Serial;
   }
 
   virtual void on_loop()
   {
-    msg_id_t id(0x06, 0x24);
+    msg_id_t id(CAT_CFG, CFG_NAV5);
     send_ubx_msg(id, sizeof(nav_data), nav_data);
     set_next_module(MODULE_TYPE_GPS_MONITOR);
   }
@@ -100,9 +134,9 @@ private:
     {
       uint8_t c = p_data[i];
 
-      //_gps_stream->write(c);
-      _gps_stream->print(c, HEX);
-      _gps_stream->print(' ');
+      _gps_stream->write(c);
+      //_gps_stream->print(c, HEX);
+      //_gps_stream->print(' ');
 
       if (p_csum != NULL)
         p_csum->add_value(c);
@@ -117,6 +151,21 @@ private:
       csum.ck_b += csum.ck_a;
     }
     return csum;
+  }
+
+  ACK_RESULT get_ubx_ack(const msg_id_t& id)
+  {
+    ACK_STATE state = ACK_STATE_NEW;
+    unsigned long start_time = millis();
+    do
+    {
+      switch(state)
+      {
+        case ACK_STATE_NEW:
+          break;
+      }
+    } while ((millis() - start_time) < ACK_TIMEOUT_MS);
+    return ACK_RESULT_TIMEOUT;
   }
 
 /*
