@@ -4,6 +4,7 @@
 #include "RuntimeModule.h"
 #include "GpsMonitorRuntimeModule.h"
 #include "MenuRuntimeModule.h"
+#include "ConfigRuntimeModule.h"
 
 class ModuleManager
 {
@@ -48,6 +49,8 @@ private:
         return &_gpsModule;
 
       // TODO:
+      case MODULE_TYPE_CONFIG:
+        return &_configModule;
 
       default:
         return NULL;
@@ -57,6 +60,7 @@ private:
 private:
   GpsMonitorRuntimeModule _gpsModule;
   MenuRuntimeModule _menuModule;
+  ConfigRuntimeModule _configModule;
 
   RuntimeModule* _pActiveModule;
 };
