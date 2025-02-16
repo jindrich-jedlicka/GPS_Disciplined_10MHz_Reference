@@ -3,6 +3,7 @@
 
 #include "RuntimeModule.h"
 #include "RuntimeContext.h"
+#include "ubx_cfg_nav5.h"
 
 //////////////////////////////////////////////////////////////////////////////////
 // Categories
@@ -97,8 +98,7 @@ protected:
 
   virtual void on_loop()
   {
-    msg_id_t id(CAT_CFG, CFG_NAV5);
-    send_ubx_msg(id, sizeof(nav_data), nav_data);
+    send_nav_cfg();
     set_next_module(MODULE_TYPE_GPS_MONITOR);
   }
 
@@ -113,6 +113,30 @@ protected:
   }
 
 private:
+  void send_nav_cfg()
+  {
+    ubx_cfg_nav5_t nav_data;
+
+    nav_data.mask = CFG_NAV5_MASK_ALL;
+    nav_data.dyn_model = DYN_MODEL_STATIONARY;
+    nav_data.fix_mode = FIX_MODE_AUTO;
+    nav_data.fixed_alt = 0;
+    nav_data.fixed_alt_var = 10000; // scaling 0.0001, [m^2] Fixed altitude variance for 2D mode 
+    nav_data.min_elv = 5; // [deg], Minimum elevation for a GNSS satellite to be used in NAV 
+    nav_data.p_dop = 250; // scaling 0.1, Position DOP mask to use
+    nav_data.t_dop = 250; // scaling 0.1, Time DOP mask to use
+    nav_data.p_acc = 100; // [m] Position accuracy mask
+    nav_data.t_acc = 300; // [m] Time accuracy mask
+    nav_data.stat_hold_trsh = 0; // [cm/s] Static hold threshold
+    nav_data.dgnss_timeout = 60; // [s] DGNSS timeout
+    nav_data.cno_trsh_num_SVs = 0; // Number of satellites required to have C/N0 above cnoThresh for a fix to be attempted
+    nav_data.cno_trsh = 0; // [dBHz] C/N0 threshold for deciding whether to attempt a fix
+    nav_data.stat_hold_max_distance = 0; // [m] Static hold distance threshold (before quitting static hold)
+    nav_data.utc_standard = UTC_STANDARD_AUTO;
+
+    send_ubx_msg(msg_id_t(CAT_CFG, CFG_NAV5), sizeof(nav_data), (uint8_t *)&nav_data);
+  }
+
   void send_ubx_msg(const msg_id_t& id, const uint16_t data_len, const uint8_t *p_data)
   {
     if (_gps_stream != NULL)
@@ -134,9 +158,9 @@ private:
     {
       uint8_t c = p_data[i];
 
-      _gps_stream->write(c);
-      //_gps_stream->print(c, HEX);
-      //_gps_stream->print(' ');
+      //_gps_stream->write(c);
+      _gps_stream->print(c, HEX);
+      _gps_stream->print(' ');
 
       if (p_csum != NULL)
         p_csum->add_value(c);
