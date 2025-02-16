@@ -4,6 +4,7 @@
 #include "RuntimeModule.h"
 #include "RuntimeContext.h"
 #include "ubx_cfg_nav5.h"
+#include "ubx_cfg_tp5.h"
 
 //////////////////////////////////////////////////////////////////////////////////
 // Categories
@@ -13,6 +14,7 @@
 //////////////////////////////////////////////////////////////////////////////////
 // CAT_CFG
 #define CFG_NAV5  0x24
+#define CFG_TP5   0x31
 
 //////////////////////////////////////////////////////////////////////////////////
 // CAT_ACK
@@ -39,8 +41,6 @@ typedef enum ACK_STATE : uint8_t
 } ACK_STATE;
 
 const static uint8_t sync_ubx_chars[] = {0xB5, 0x62};
-
-const static uint8_t nav_data[] = {0xFF, 0xFF, 0x02, 0x03, 0x00, 0x00, 0x00, 0x00, 0x10, 0x27, 0x00, 0x00, 0x05, 0x00, 0xFA, 0x00, 0xFA, 0x00, 0x64, 0x00, 0x2C, 0x01, 0x00, 0x3C, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 
 typedef struct checksum_t
 {
@@ -113,6 +113,30 @@ protected:
   }
 
 private:
+  void send_tp5_cfg()
+  {
+    ubx_cfg_tp5_t tp5_data;
+    tp5_data.tp_idx = TP_IDX_TIMEPULSE;
+    tp5_data.version = 0x01;
+    //reserved_1_1 = 0;
+    //reserved_1_2 = 0;
+    tp5_data.ant_cable_delay = 50;
+    tp5_data.rf_group_delay = 0;
+    tp5_data.freq_per = 1; // Hz
+    tp5_data.freq_per_lock = 100000; // Hz
+    tp5_data.pulse_len_ratio = 0x80000000;
+    tp5_data.pulse_len_ratio_lock = 0x80000000;
+    tp5_data.user_config_delay = 0;
+    tp5_data.flags = CFG_TP5_V1_ACTIVE
+      | CFG_TP5_V1_LOCK_GNSS_FREQ 
+      | CFG_TP5_V1_LOCKED_OTHER_SET
+      | CFG_TP5_V1_IS_FREQ
+      | CFG_TP5_V1_ALGN_TO_TOW
+      | CFG_TP5_V1_POLARITY;
+
+    send_ubx_msg(msg_id_t(CAT_CFG, CFG_TP5), sizeof(tp5_data), (uint8_t *)&tp5_data);
+  }
+
   void send_nav_cfg()
   {
     ubx_cfg_nav5_t nav_data;
