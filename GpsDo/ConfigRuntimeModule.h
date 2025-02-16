@@ -5,84 +5,14 @@
 #include "RuntimeContext.h"
 #include "ubx_cfg_nav5.h"
 #include "ubx_cfg_tp5.h"
-
-//////////////////////////////////////////////////////////////////////////////////
-// Categories
-#define CAT_CFG   0x06
-#define CAT_ACK   0x05
-
-//////////////////////////////////////////////////////////////////////////////////
-// CAT_CFG
-#define CFG_NAV5  0x24
-#define CFG_TP5   0x31
-
-//////////////////////////////////////////////////////////////////////////////////
-// CAT_ACK
-#define ACK_ACK   0x01 
-#define ACK_NACK  0x00 
-
-#define ACK_TIMEOUT_MS 3000
-
-typedef enum ACK_RESULT : uint8_t
-{
-  ACK_RESULT_TIMEOUT,
-  ACK_RESULT_FALSE,
-  ACK_RESULT_TRUE,
-} ACK_RESULT;
-
-typedef enum ACK_STATE : uint8_t
-{
-  ACK_STATE_NEW,
-  ACK_STATE_CLASS,
-  ACK_STATE_ACK,
-  ACK_STATE_ID_LEN,
-  ACK_STATE_ID,
-  ACK_STATE_CSUM,
-} ACK_STATE;
-
-const static uint8_t sync_ubx_chars[] = {0xB5, 0x62};
-
-typedef struct checksum_t
-{
-  checksum_t()
-  {
-    ck_a = 0;
-    ck_b = 0;
-  }
-  checksum_t& add_value(uint8_t value)
-  {
-      ck_a += value;
-      ck_b += ck_a;
-      return *this;
-  }
-
-  uint8_t ck_a;
-  uint8_t ck_b;
-} checksum_t;
-
-typedef struct msg_id_t
-{
-  msg_id_t()
-  {
-    msg_class = 0;
-    msg_id = 0;
-  }
-  msg_id_t(uint8_t _msg_class, uint8_t _msg_id)
-  {
-    msg_class = _msg_class;
-    msg_id = _msg_id;
-  }
-
-  uint8_t msg_class;
-  uint8_t msg_id;
-} msg_id_t;
+#include "UBXGPS.h"
 
 class ConfigRuntimeModule : public RuntimeModule
 {
 public:
   ConfigRuntimeModule() : RuntimeModule(0)
   {
-    _gps_stream = NULL;    
+    // do nothing
   }
 
 public:
@@ -93,12 +23,12 @@ protected:
   {
     //TODO: use gps
     //_gps_stream = &RuntimeContext::get_gps_stream();
-    _gps_stream = &Serial;
+    _ubx_gps.init(&Serial);
   }
 
   virtual void on_loop()
   {
-    send_nav_cfg();
+    send_tp5_cfg();
     set_next_module(MODULE_TYPE_GPS_MONITOR);
   }
 
@@ -118,9 +48,7 @@ private:
     ubx_cfg_tp5_t tp5_data;
     tp5_data.tp_idx = TP_IDX_TIMEPULSE;
     tp5_data.version = 0x01;
-    //reserved_1_1 = 0;
-    //reserved_1_2 = 0;
-    tp5_data.ant_cable_delay = 50;
+    tp5_data.ant_cable_delay = 50; // [ns]
     tp5_data.rf_group_delay = 0;
     tp5_data.freq_per = 1; // Hz
     tp5_data.freq_per_lock = 100000; // Hz
@@ -134,7 +62,7 @@ private:
       | CFG_TP5_V1_ALGN_TO_TOW
       | CFG_TP5_V1_POLARITY;
 
-    send_ubx_msg(msg_id_t(CAT_CFG, CFG_TP5), sizeof(tp5_data), (uint8_t *)&tp5_data);
+    _ubx_gps.send_ubx_msg(msg_id_t(CAT_CFG, CFG_TP5), sizeof(tp5_data), (uint8_t *)&tp5_data);
   }
 
   void send_nav_cfg()
@@ -158,39 +86,10 @@ private:
     nav_data.stat_hold_max_distance = 0; // [m] Static hold distance threshold (before quitting static hold)
     nav_data.utc_standard = UTC_STANDARD_AUTO;
 
-    send_ubx_msg(msg_id_t(CAT_CFG, CFG_NAV5), sizeof(nav_data), (uint8_t *)&nav_data);
+    _ubx_gps.send_ubx_msg(msg_id_t(CAT_CFG, CFG_NAV5), sizeof(nav_data), (uint8_t *)&nav_data);
   }
 
-  void send_ubx_msg(const msg_id_t& id, const uint16_t data_len, const uint8_t *p_data)
-  {
-    if (_gps_stream != NULL)
-    {
-      send_data(sizeof(sync_ubx_chars), sync_ubx_chars, NULL);
-
-      checksum_t csum;
-      send_data(sizeof(id), (uint8_t *)&id, &csum);
-      send_data(sizeof(data_len), (uint8_t *)&data_len, &csum);
-      send_data(data_len, p_data, &csum);
-
-      send_data(sizeof(csum), (uint8_t *)&csum, NULL);
-    }
-  }
-
-  void send_data(const uint16_t data_len, const uint8_t *p_data, checksum_t *p_csum)
-  {
-    for (uint16_t i = 0; i < data_len; i++) 
-    {
-      uint8_t c = p_data[i];
-
-      //_gps_stream->write(c);
-      _gps_stream->print(c, HEX);
-      _gps_stream->print(' ');
-
-      if (p_csum != NULL)
-        p_csum->add_value(c);
-    }
-  }
-
+/*
   checksum_t calculate_checksum(checksum_t& csum, const uint8_t *data, const uint16_t len) const
   {
     for (uint16_t i = 0; i < len; i++)
@@ -200,21 +99,7 @@ private:
     }
     return csum;
   }
-
-  ACK_RESULT get_ubx_ack(const msg_id_t& id)
-  {
-    ACK_STATE state = ACK_STATE_NEW;
-    unsigned long start_time = millis();
-    do
-    {
-      switch(state)
-      {
-        case ACK_STATE_NEW:
-          break;
-      }
-    } while ((millis() - start_time) < ACK_TIMEOUT_MS);
-    return ACK_RESULT_TIMEOUT;
-  }
+*/
 
 /*
   bool get_UBX_ack(uint8_t *MSG) 
@@ -298,7 +183,7 @@ private:
 }  
 */
 private:
-  Stream* _gps_stream;
+  UBXGPS _ubx_gps;
 };
 
 #endif
