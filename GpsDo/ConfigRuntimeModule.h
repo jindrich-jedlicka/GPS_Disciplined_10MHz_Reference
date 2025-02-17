@@ -13,6 +13,7 @@ typedef enum CONFIG_STEP : uint8_t
 {
   CONFIG_STEP_TP5,
   CONFIG_STEP_NAV5,
+  CONFIG_STEP_WAITING_DATA,
   CONFIG_STEP_DONE,
 } CONFIG_STEP;
 
@@ -53,11 +54,15 @@ protected:
         case CONFIG_STEP_NAV5:
           print_step("NAV");
           print_result(send_nav_cfg());
+          set_step(CONFIG_STEP_WAITING_DATA);
+          break;
+
+        case CONFIG_STEP_WAITING_DATA:
+          print_step("Waiting for data");
           set_step(CONFIG_STEP_DONE);
           break;
 
         case CONFIG_STEP_DONE:
-          print_step("Waiting for data");
           set_next_module(MODULE_TYPE_GPS_MONITOR);
           break;
       }
@@ -95,13 +100,13 @@ private:
     switch (result)
     {
       case ACK_RESULT_TIMEOUT:
-        RuntimeContext::get_display().print(" Timeout");
+        RuntimeContext::get_display().print(" TIMEOUT");
         break;
       case ACK_RESULT_FALSE:
-        RuntimeContext::get_display().print(" Failed");
+        RuntimeContext::get_display().print(" FAILED");
         break;
       case ACK_RESULT_TRUE:
-        RuntimeContext::get_display().print(" Ok");
+        RuntimeContext::get_display().print(" OK");
         break;
     }
   }
