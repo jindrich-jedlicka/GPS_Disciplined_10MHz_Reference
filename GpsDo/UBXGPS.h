@@ -29,8 +29,12 @@ const static uint8_t sync_ubx_chars[] = {0xB5, 0x62};
 
 //////////////////////////////////////////////////////////////////////////////////
 // checksum_t
+//////////////////////////////////////////////////////////////////////////////////
 typedef struct checksum_t
 {
+  uint8_t ck_a;
+  uint8_t ck_b;
+  
   checksum_t()
   {
     ck_a = 0;
@@ -42,15 +46,16 @@ typedef struct checksum_t
       ck_b += ck_a;
       return *this;
   }
-
-  uint8_t ck_a;
-  uint8_t ck_b;
 } checksum_t;
 
 //////////////////////////////////////////////////////////////////////////////////
 // msg_id_t
+//////////////////////////////////////////////////////////////////////////////////
 typedef struct msg_id_t
 {
+  uint8_t msg_class;
+  uint8_t msg_id;
+
   msg_id_t()
   {
     msg_class = 0;
@@ -61,26 +66,24 @@ typedef struct msg_id_t
     msg_class = _msg_class;
     msg_id = _msg_id;
   }
-
-  uint8_t msg_class;
-  uint8_t msg_id;
 } msg_id_t;
 
 //////////////////////////////////////////////////////////////////////////////////
 // ack_state_t
+//////////////////////////////////////////////////////////////////////////////////
 typedef struct ack_state_t
 {
+  msg_id_t msg_id;
+  checksum_t csum;
+  uint8_t state;
+  bool is_ack;
+
   ack_state_t(const msg_id_t& _msg_id)
   {
     msg_id = _msg_id;
     state = 0;
     is_ack = false;
   }
-
-  msg_id_t msg_id;
-  checksum_t csum;
-  uint8_t state;
-  bool is_ack;
 
 public:
   ack_state_t process_char(uint8_t c)  
@@ -101,6 +104,7 @@ public:
           is_ack = true;
         else
           return ack_state_t(msg_id);
+
         csum.add_value(c);
         return move_next();
 
@@ -153,6 +157,7 @@ private:
 
 //////////////////////////////////////////////////////////////////////////////////
 // UBXGPS
+//////////////////////////////////////////////////////////////////////////////////
 class UBXGPS
 {
 public:
@@ -167,7 +172,7 @@ public:
     _gps_stream = stream;
   }
 
-  void send_ubx_msg(const msg_id_t& id, const uint16_t data_len, const uint8_t *p_data)
+  ACK_RESULT send_msg(const msg_id_t& id, const uint16_t data_len, const uint8_t *p_data)
   {
     if (_gps_stream != NULL)
     {
@@ -179,6 +184,7 @@ public:
       send_data(data_len, p_data, &csum);
 
       send_data(sizeof(csum), (uint8_t *)&csum, NULL);
+      return get_ack(id);
     }
   }
 
@@ -198,11 +204,11 @@ private:
     }
   }
 
-  ACK_RESULT get_ubx_ack(const msg_id_t& id)
+  ACK_RESULT get_ack(const msg_id_t& id)
   {
     unsigned long start_time = millis();
     ack_state_t ack = ack_state_t(id);
-    
+
     do
     {
       if (_gps_stream->available())
@@ -213,6 +219,7 @@ private:
           return ack.is_ack ? ACK_RESULT_TRUE : ACK_RESULT_FALSE;
       }
     } while ((millis() - start_time) < ACK_TIMEOUT_MS);
+
     return ACK_RESULT_TIMEOUT;
   }
 
