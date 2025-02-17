@@ -25,18 +25,10 @@ typedef enum ACK_RESULT : uint8_t
   ACK_RESULT_TRUE,
 } ACK_RESULT;
 
-typedef enum ACK_STATE : uint8_t
-{
-  ACK_STATE_NEW,
-  ACK_STATE_CLASS,
-  ACK_STATE_ACK,
-  ACK_STATE_ID_LEN,
-  ACK_STATE_ID,
-  ACK_STATE_CSUM,
-} ACK_STATE;
-
 const static uint8_t sync_ubx_chars[] = {0xB5, 0x62};
 
+//////////////////////////////////////////////////////////////////////////////////
+// checksum_t
 typedef struct checksum_t
 {
   checksum_t()
@@ -55,6 +47,8 @@ typedef struct checksum_t
   uint8_t ck_b;
 } checksum_t;
 
+//////////////////////////////////////////////////////////////////////////////////
+// msg_id_t
 typedef struct msg_id_t
 {
   msg_id_t()
@@ -72,12 +66,13 @@ typedef struct msg_id_t
   uint8_t msg_id;
 } msg_id_t;
 
+//////////////////////////////////////////////////////////////////////////////////
+// ack_state_t
 typedef struct ack_state_t
 {
   ack_state_t(const msg_id_t& _msg_id)
   {
     msg_id = _msg_id;
-    csum = checksum_t();
     state = 0;
     is_ack = false;
   }
@@ -87,24 +82,17 @@ typedef struct ack_state_t
   uint8_t state;
   bool is_ack;
 
+public:
   ack_state_t process_char(uint8_t c)  
   {
     switch(state)
     {
-      case 0:
-        if (sync_ubx_chars[0] != c)
-          return ack_state_t(msg_id);
-        break;
+      case 0: 
+      case 1: 
+        return if_equal_move_next(sync_ubx_chars[state], c);
 
-      case 1:
-        if (sync_ubx_chars[1] != c)
-          return ack_state_t(msg_id);
-        break;
-      
       case 2:
-        if (c != CAT_ACK)
-          return ack_state_t(msg_id);
-        break;
+        return if_equal_move_next_incl_csum(CAT_ACK, c);
 
       case 3:
         if (c == ACK_NACK)
@@ -113,18 +101,58 @@ typedef struct ack_state_t
           is_ack = true;
         else
           return ack_state_t(msg_id);
-        break;
+        csum.add_value(c);
+        return move_next();
 
       case 4:
-        break;
-    }
+        return if_equal_move_next_incl_csum(2, c); // message length - low byte
+      case 5:
+        return if_equal_move_next_incl_csum(0, c); // message length - high byte
 
+      case 6:
+        return if_equal_move_next_incl_csum(msg_id.msg_class, c);         
+      case 7:      
+        return if_equal_move_next_incl_csum(msg_id.msg_id, c); 
+        
+      case 8:
+        return if_equal_move_next(csum.ck_a, c);        
+      case 9:
+        return if_equal_move_next(csum.ck_b, c);
+
+      default:
+        return ack_state_t(msg_id);
+    }
+  }
+
+  inline bool ack_ready() { return state == 10; }
+
+private:
+  ack_state_t if_equal_move_next(const uint8_t a, const uint8_t b)  
+  {
+    if (a != b)
+      return ack_state_t(msg_id);
+
+    return move_next();
+  }
+
+  ack_state_t if_equal_move_next_incl_csum(const uint8_t a, const uint8_t b)  
+  {
+    if (a != b)
+      return ack_state_t(msg_id);
+
+    csum.add_value(a);
+    return move_next();
+  }
+
+  inline ack_state_t move_next()
+  {
     state++;
     return *this;
   }
-
 } ack_state_t;
 
+//////////////////////////////////////////////////////////////////////////////////
+// UBXGPS
 class UBXGPS
 {
 public:
@@ -161,9 +189,9 @@ private:
     {
       uint8_t c = p_data[i];
 
-      //_gps_stream->write(c);
-      _gps_stream->print(c, HEX);
-      _gps_stream->print(' ');
+      _gps_stream->write(c);
+      //_gps_stream->print(c, HEX);
+      //_gps_stream->print(' ');
 
       if (p_csum != NULL)
         p_csum->add_value(c);
@@ -172,24 +200,21 @@ private:
 
   ACK_RESULT get_ubx_ack(const msg_id_t& id)
   {
-    ACK_STATE state = ACK_STATE_NEW;
     unsigned long start_time = millis();
+    ack_state_t ack = ack_state_t(id);
+    
     do
     {
       if (_gps_stream->available())
       {
-        _gps_stream->read();
-      }
-      switch(state)
-      {
-        case ACK_STATE_NEW:
-          break;
+        ack = ack.process_char(_gps_stream->read());
+
+        if (ack.ack_ready())
+          return ack.is_ack ? ACK_RESULT_TRUE : ACK_RESULT_FALSE;
       }
     } while ((millis() - start_time) < ACK_TIMEOUT_MS);
     return ACK_RESULT_TIMEOUT;
   }
-
-
 
 private:
   Stream* _gps_stream;
