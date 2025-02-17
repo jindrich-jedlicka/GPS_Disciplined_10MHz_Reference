@@ -5,6 +5,7 @@
 #include "RuntimeContext.h"
 #include "ubx_cfg_nav5.h"
 #include "ubx_cfg_tp5.h"
+#include "ubx_cfg_gnss.h"
 #include "UBXGPS.h"
 
 #define STEP_TIME_MS 1000 

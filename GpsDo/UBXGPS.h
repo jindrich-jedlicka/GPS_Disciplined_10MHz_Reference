@@ -10,6 +10,7 @@
 // CAT_CFG
 #define CFG_NAV5  0x24
 #define CFG_TP5   0x31
+#define CFG_GNSS  0x3E
 
 //////////////////////////////////////////////////////////////////////////////////
 // CAT_ACK
@@ -196,9 +197,6 @@ private:
       uint8_t c = p_data[i];
 
       _gps_stream->write(c);
-      //_gps_stream->print(c, HEX);
-      //_gps_stream->print(' ');
-
       if (p_csum != NULL)
         p_csum->add_value(c);
     }
