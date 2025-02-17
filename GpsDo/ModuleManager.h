@@ -17,7 +17,7 @@ public:
 public:
   void setup()
   {
-    set_module(MODULE_TYPE_GPS_MONITOR);
+    set_module(MODULE_TYPE_CONFIG);
   }
 
   void loop()

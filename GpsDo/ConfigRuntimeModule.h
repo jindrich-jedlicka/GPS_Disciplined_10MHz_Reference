@@ -7,12 +7,22 @@
 #include "ubx_cfg_tp5.h"
 #include "UBXGPS.h"
 
+#define STEP_TIME_MS 1000 
+
+typedef enum CONFIG_STEP : uint8_t
+{
+  CONFIG_STEP_TP5,
+  CONFIG_STEP_NAV5,
+  CONFIG_STEP_DONE,
+} CONFIG_STEP;
+
 class ConfigRuntimeModule : public RuntimeModule
 {
 public:
   ConfigRuntimeModule() : RuntimeModule(0)
   {
-    // do nothing
+    _step_start_time = 0;
+    _step = CONFIG_STEP_TP5;
   }
 
 public:
@@ -21,14 +31,37 @@ public:
 protected:
   virtual void on_init()
   {
-    //TODO: use gps
     _ubx_gps.init(&RuntimeContext::get_gps_stream());
+
+    _step_start_time = millis() - STEP_TIME_MS;
+    _step = CONFIG_STEP_TP5;
+    init_dsp();
   }
 
   virtual void on_loop()
   {
-    send_tp5_cfg();
-    set_next_module(MODULE_TYPE_GPS_MONITOR);
+    if (STEP_TIME_MS <= (millis() - _step_start_time))
+    {
+      switch (_step)
+      {
+        case CONFIG_STEP_TP5:
+          print_step("TP5");
+          print_result(send_tp5_cfg());
+          set_step(CONFIG_STEP_NAV5);
+          break;
+
+        case CONFIG_STEP_NAV5:
+          print_step("NAV");
+          print_result(send_nav_cfg());
+          set_step(CONFIG_STEP_DONE);
+          break;
+
+        case CONFIG_STEP_DONE:
+          print_step("Waiting for data");
+          set_next_module(MODULE_TYPE_GPS_MONITOR);
+          break;
+      }
+    }
   }
 
   virtual void on_encoder_pressed() 
@@ -42,10 +75,50 @@ protected:
   }
 
 private:
-  void send_tp5_cfg()
+  void set_step(CONFIG_STEP step)
+  {
+    _step_start_time = millis();
+    _step = step;
+  }
+
+  void init_dsp()
+  {
+    GpsLiquidCrystal& dsp = RuntimeContext::get_display();
+
+    dsp.clear();
+    dsp.setCursor(0, 0);
+    dsp.print("Neo-8M GPS:");
+  }
+
+  void print_result(ACK_RESULT result)
+  {
+    switch (result)
+    {
+      case ACK_RESULT_TIMEOUT:
+        RuntimeContext::get_display().print(" Timeout");
+        break;
+      case ACK_RESULT_FALSE:
+        RuntimeContext::get_display().print(" Failed");
+        break;
+      case ACK_RESULT_TRUE:
+        RuntimeContext::get_display().print(" Ok");
+        break;
+    }
+  }
+
+  void print_step(const String &text)
+  {
+    GpsLiquidCrystal& dsp = RuntimeContext::get_display();
+    dsp.setCursor(0, 1);
+    dsp.print("                ");
+    dsp.setCursor(0, 1);
+    dsp.print(text);    
+  }
+
+  ACK_RESULT send_tp5_cfg()
   {
     ubx_cfg_tp5_t tp5_data;
-    tp5_data.tp_idx = TP_IDX_TIMEPULSE;
+    tp5_data.tp_idx = TP_IDX_TIMEPULSE2;
     tp5_data.version = 0x01;
     tp5_data.ant_cable_delay = 50; // [ns]
     tp5_data.rf_group_delay = 0;
@@ -61,10 +134,10 @@ private:
       | CFG_TP5_V1_ALGN_TO_TOW
       | CFG_TP5_V1_POLARITY;
 
-    _ubx_gps.send_msg(msg_id_t(CAT_CFG, CFG_TP5), sizeof(tp5_data), (uint8_t *)&tp5_data);
+    return _ubx_gps.send_msg(msg_id_t(CAT_CFG, CFG_TP5), sizeof(tp5_data), (uint8_t *)&tp5_data);
   }
 
-  void send_nav_cfg()
+  ACK_RESULT send_nav_cfg()
   {
     ubx_cfg_nav5_t nav_data;
 
@@ -85,11 +158,13 @@ private:
     nav_data.stat_hold_max_distance = 0; // [m] Static hold distance threshold (before quitting static hold)
     nav_data.utc_standard = UTC_STANDARD_AUTO;
 
-    _ubx_gps.send_msg(msg_id_t(CAT_CFG, CFG_NAV5), sizeof(nav_data), (uint8_t *)&nav_data);
+    return _ubx_gps.send_msg(msg_id_t(CAT_CFG, CFG_NAV5), sizeof(nav_data), (uint8_t *)&nav_data);
   }
 
 private:
   UBXGPS _ubx_gps;
+  unsigned long _step_start_time;
+  CONFIG_STEP _step;
 };
 
 #endif
