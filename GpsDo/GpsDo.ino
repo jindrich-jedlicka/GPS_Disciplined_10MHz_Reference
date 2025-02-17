@@ -24,12 +24,6 @@ void setup()
 {
   PCICR |= (1 << PCIE1);
   PCMSK1 |= (1 << PCINT10) | (1 << PCINT11);
-/*
-  lcd.setCursor(0, 0);
-  lcd.print("Neo-8M GPS DO ");
-  lcd.setCursor(0, 1);
-  lcd.print("Waiting for data");
-*/
 
   RuntimeContext::setup();
   modules.setup();

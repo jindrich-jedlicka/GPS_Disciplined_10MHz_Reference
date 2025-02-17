@@ -173,6 +173,24 @@ public:
     _gps_stream = stream;
   }
 
+  ACK_RESULT send_msg(const msg_id_t& id, const uint16_t data_len_1, const uint8_t *p_data_1, const uint16_t data_len_2, const uint8_t *p_data_2)
+  {
+    if (_gps_stream != NULL)
+    {
+      send_data(sizeof(sync_ubx_chars), sync_ubx_chars, NULL);
+
+      checksum_t csum;
+      send_data(sizeof(id), (uint8_t *)&id, &csum);
+      uint16_t data_len = data_len_1 + data_len_2;
+      send_data(sizeof(data_len), (uint8_t *)&data_len, &csum);
+      send_data(data_len_1, p_data_1, &csum);
+      send_data(data_len_2, p_data_2, &csum);
+
+      send_data(sizeof(csum), (uint8_t *)&csum, NULL);
+      return get_ack(id);
+    }
+  }
+
   ACK_RESULT send_msg(const msg_id_t& id, const uint16_t data_len, const uint8_t *p_data)
   {
     if (_gps_stream != NULL)

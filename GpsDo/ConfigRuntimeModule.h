@@ -10,10 +10,13 @@
 
 #define STEP_TIME_MS 1000 
 
+static GNSS_ID gnss_ids[] = { GNSS_ID_GPS, GNSS_ID_SBAS, GNSS_ID_GALILEO, GNSS_ID_BEI_DOU, GNSS_ID_QZSS, GNSS_ID_GLONASS };
+
 typedef enum CONFIG_STEP : uint8_t
 {
   CONFIG_STEP_TP5,
   CONFIG_STEP_NAV5,
+  CONFIG_STEP_GNSS,
   CONFIG_STEP_WAITING_DATA,
   CONFIG_STEP_DONE,
 } CONFIG_STEP;
@@ -55,6 +58,12 @@ protected:
         case CONFIG_STEP_NAV5:
           print_step("NAV");
           print_result(send_nav_cfg());
+          set_step(CONFIG_STEP_GNSS);
+          break;
+
+        case CONFIG_STEP_GNSS:
+          print_step("GNSS");
+          print_result(send_gnss_cfg(GNSS_ID_GPS));
           set_step(CONFIG_STEP_WAITING_DATA);
           break;
 
@@ -119,6 +128,22 @@ private:
     dsp.print("                ");
     dsp.setCursor(0, 1);
     dsp.print(text);    
+  }
+
+  ACK_RESULT send_gnss_cfg(GNSS_ID id)
+  {
+    const uint8_t len = sizeof(gnss_ids) / sizeof(gnss_ids[0]);
+    ubx_cfg_gnss_block_t gnss[len];
+
+    for (uint8_t i = 0; i < len; i++)
+    {
+      gnss[i] = ubx_cfg_gnss_block_t(gnss_ids[i], gnss_ids[i] == id);
+    }
+
+    ubx_cfg_gnss_t gnss_base;
+    gnss_base.num_config_blocks = len;
+
+    return _ubx_gps.send_msg(msg_id_t(CAT_CFG, CFG_GNSS), sizeof(gnss_base), (uint8_t *)&gnss_base, sizeof(gnss), (uint8_t *)&gnss);
   }
 
   ACK_RESULT send_tp5_cfg()

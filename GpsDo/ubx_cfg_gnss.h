@@ -47,6 +47,14 @@ typedef struct ubx_cfg_gnss_block_t
   uint8_t   reserved1;          // Reserved
   GNSS_FLAG flags;              // Bitfield of flags (see graphic in datasheet)
 
+  ubx_cfg_gnss_block_t()
+  {
+    gnss_id = 0;
+    res_trk_ch = 0;
+    max_trk_ch = 0;
+    reserved1 = 0;
+    flags = 0;
+  }
   ubx_cfg_gnss_block_t(GNSS_ID _id, bool enable = true)
   {
     gnss_id = _id;
