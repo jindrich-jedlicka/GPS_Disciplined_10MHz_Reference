@@ -6,7 +6,6 @@
 #include "ubx_cfg_nav5.h"
 #include "ubx_cfg_tp5.h"
 #include "ubx_cfg_gnss.h"
-#include "ubx_cfg_cfg.h"
 #include "UBXGPS.h"
 
 #define STEP_TIME_MS 1000 
@@ -18,6 +17,7 @@ typedef enum CONFIG_STEP : uint8_t
   CONFIG_STEP_TP5,
   CONFIG_STEP_NAV5,
   CONFIG_STEP_GNSS,
+  CONFIG_STEP_SAVE,
   CONFIG_STEP_WAITING_DATA,
   CONFIG_STEP_DONE,
 } CONFIG_STEP;
@@ -65,11 +65,18 @@ protected:
         case CONFIG_STEP_GNSS:
           print_step("GNSS");
           print_result(send_gnss_cfg(GNSS_ID_GPS));
+          set_step(CONFIG_STEP_SAVE);
+          break;
+
+        case CONFIG_STEP_SAVE:
+          print_step("CFG");
+          print_result(_ubx_gps.save_all_to_bbr());
           set_step(CONFIG_STEP_WAITING_DATA);
           break;
 
         case CONFIG_STEP_WAITING_DATA:
           print_step("Waiting for data");
+          _ubx_gps.hw_reset();
           set_step(CONFIG_STEP_DONE);
           break;
 

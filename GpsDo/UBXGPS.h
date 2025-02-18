@@ -1,6 +1,7 @@
 #ifndef _UBXGPS
 #define _UBXGPS
 
+#include "ubx_cfg_cfg.h"
 #include "ubx_cfg_rst.h"
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -177,6 +178,22 @@ public:
     _gps_stream = stream;
   }
 
+  void hw_reset()
+  {
+    ubx_cfg_rst_t rst_data;
+    rst_data.nav_bbr_mask = NAV_BBR_HOT_START;
+    rst_data.reset_mode = RESET_MODE_HW;
+    send_msg_no_ack(msg_id_t(CAT_CFG, CFG_RST), sizeof(rst_data), (uint8_t *)&rst_data);    
+  }
+
+  ACK_RESULT save_all_to_bbr()
+  {
+    ubx_cfg_cfg_t cfg_data;
+    cfg_data.save_mask = CFG_MASK_ALL;
+    cfg_data.device_mask = CFG_DEVICE_BBR;
+    return send_msg(msg_id_t(CAT_CFG, CFG_CFG), sizeof(cfg_data), (uint8_t *)&cfg_data);
+  }
+
   ACK_RESULT send_msg(const msg_id_t& id, const uint16_t data_len_1, const uint8_t *p_data_1, const uint16_t data_len_2, const uint8_t *p_data_2)
   {
     if (_gps_stream != NULL)
@@ -199,6 +216,14 @@ public:
   {
     if (_gps_stream != NULL)
     {
+      send_msg_no_ack(id, data_len, p_data);
+      return get_ack(id);
+    }
+  }
+
+private:
+  void send_msg_no_ack(const msg_id_t& id, const uint16_t data_len, const uint8_t *p_data)
+  {
       send_data(sizeof(sync_ubx_chars), sync_ubx_chars, NULL);
 
       checksum_t csum;
@@ -207,11 +232,8 @@ public:
       send_data(data_len, p_data, &csum);
 
       send_data(sizeof(csum), (uint8_t *)&csum, NULL);
-      return get_ack(id);
-    }
   }
 
-private:
   void send_data(const uint16_t data_len, const uint8_t *p_data, checksum_t *p_csum)
   {
     for (uint16_t i = 0; i < data_len; i++) 

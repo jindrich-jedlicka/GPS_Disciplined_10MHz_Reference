@@ -3,6 +3,8 @@
 
 typedef enum CFG_MASK : uint32_t
 {
+  CFG_MASK_ALL = 0xFFFF,
+  
   CFG_MASK_IO_PORT = 0x0001,    // Communications port settings. Modifying this sub-section results in an IO system reset. Because of this undefined data may be output for a short period of time after receiving the message.
   CFG_MASK_MSG_CONF = 0x0002,   // Message configuration
   CFG_MASK_INF_MSG = 0x0004,    // INF message configuration

@@ -4,6 +4,8 @@
 typedef enum NAV_BBR : uint16_t 
 {
   NAV_BBR_HOT_START = 0x0000,
+  NAV_BBR_WARM_START = 0x0001,
+  NAV_BBR_COLD_START = 0xFFFF,
 
   NAV_BBR_EPH = 0x0001,     // Ephemeris
   NAV_BBR_ALM = 0x0002,     // Almanac
