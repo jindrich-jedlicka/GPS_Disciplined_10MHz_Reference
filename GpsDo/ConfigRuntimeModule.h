@@ -6,11 +6,13 @@
 #include "ubx_cfg_nav5.h"
 #include "ubx_cfg_tp5.h"
 #include "ubx_cfg_gnss.h"
+#include "ubx_cfg_ant.h"
 #include "UBXGPS.h"
 
 #define STEP_TIME_MS 1000 
 
 static GNSS_ID gnss_ids[] = { GNSS_ID_GPS, GNSS_ID_SBAS, GNSS_ID_GALILEO, GNSS_ID_BEI_DOU, GNSS_ID_QZSS, GNSS_ID_GLONASS };
+static GNSS_ID gps_ids[] = { GNSS_ID_GPS, GNSS_ID_GLONASS, GNSS_ID_SBAS, GNSS_ID_QZSS };
 
 typedef enum CONFIG_STEP : uint8_t
 {
@@ -52,7 +54,8 @@ protected:
       switch (_step)
       {
         case CONFIG_STEP_NEW:
-          print_step("Starting");
+          print_step("ANT");
+          print_result(send_ant_cfg());
           set_step(CONFIG_STEP_TP5);
           break;
 
@@ -70,7 +73,7 @@ protected:
 
         case CONFIG_STEP_GNSS:
           print_step("GNSS");
-          print_result(send_gnss_cfg(GNSS_ID_GPS));
+          print_result(send_gnss_cfg(sizeof(gps_ids), gps_ids));
           set_step(CONFIG_STEP_SAVE);
           break;
 
@@ -144,14 +147,36 @@ private:
     dsp.print(text);    
   }
 
-  ACK_RESULT send_gnss_cfg(GNSS_ID id)
+  ACK_RESULT send_ant_cfg()
+  {
+    ubx_cfg_ant_t ant_data;
+    ant_data.flags = ANT_FLAGS_SVCS;
+    ant_data.pins = 16;          // pins-pinSwitch
+    ant_data.pins |= (15 << 5);  // pins-pinSCD
+    ant_data.pins |= (14 << 10); // pins-pinOCD
+    ant_data.pins |= 1 << 15;    // reconfig
+
+    return _ubx_gps.send_msg(msg_id_t(CAT_CFG, CFG_ANT), sizeof(ant_data), (uint8_t *)&ant_data);
+  }
+
+  bool contains_id(const GNSS_ID id, const uint8_t ids_len, const GNSS_ID* ids)
+  {
+    for (uint8_t i = 0; i < ids_len; i++)
+    {
+      if (ids[i] == id)
+        return true;
+    }
+    return false;
+  }
+
+  ACK_RESULT send_gnss_cfg(uint8_t ids_len, GNSS_ID* ids)
   {
     const uint8_t len = sizeof(gnss_ids) / sizeof(gnss_ids[0]);
     ubx_cfg_gnss_block_t gnss[len];
 
     for (uint8_t i = 0; i < len; i++)
     {
-      gnss[i] = ubx_cfg_gnss_block_t(gnss_ids[i], gnss_ids[i] == id);
+      gnss[i] = ubx_cfg_gnss_block_t(gnss_ids[i], contains_id(gnss_ids[i], ids_len, ids));
     }
 
     ubx_cfg_gnss_t gnss_base;

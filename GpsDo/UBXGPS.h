@@ -13,6 +13,7 @@
 // CAT_CFG
 #define CFG_RST   0x04
 #define CFG_CFG   0x09
+#define CFG_ANT   0x13
 #define CFG_NAV5  0x24
 #define CFG_TP5   0x31
 #define CFG_GNSS  0x3E
@@ -22,7 +23,7 @@
 #define ACK_ACK   0x01 
 #define ACK_NACK  0x00 
 
-#define ACK_TIMEOUT_MS 3000
+#define ACK_TIMEOUT_MS 5000
 
 typedef enum ACK_RESULT : uint8_t
 {
