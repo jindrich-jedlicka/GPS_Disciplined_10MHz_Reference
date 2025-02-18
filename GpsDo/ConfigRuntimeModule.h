@@ -12,7 +12,7 @@
 #define STEP_TIME_MS 1000 
 
 static GNSS_ID gnss_ids[] = { GNSS_ID_GPS, GNSS_ID_SBAS, GNSS_ID_GALILEO, GNSS_ID_BEI_DOU, GNSS_ID_QZSS, GNSS_ID_GLONASS };
-static GNSS_ID gps_ids[] = { GNSS_ID_GPS, GNSS_ID_GLONASS, GNSS_ID_SBAS, GNSS_ID_QZSS };
+static GNSS_ID gps_ids[] = { GNSS_ID_GPS, GNSS_ID_SBAS, GNSS_ID_QZSS };
 
 typedef enum CONFIG_STEP : uint8_t
 {
