@@ -14,6 +14,7 @@ static GNSS_ID gnss_ids[] = { GNSS_ID_GPS, GNSS_ID_SBAS, GNSS_ID_GALILEO, GNSS_I
 
 typedef enum CONFIG_STEP : uint8_t
 {
+  CONFIG_STEP_NEW,
   CONFIG_STEP_TP5,
   CONFIG_STEP_NAV5,
   CONFIG_STEP_GNSS,
@@ -28,7 +29,7 @@ public:
   ConfigRuntimeModule() : RuntimeModule(0)
   {
     _step_start_time = 0;
-    _step = CONFIG_STEP_TP5;
+    _step = CONFIG_STEP_NEW;
   }
 
 public:
@@ -40,7 +41,7 @@ protected:
     _ubx_gps.init(&RuntimeContext::get_gps_stream());
 
     _step_start_time = millis() - STEP_TIME_MS;
-    _step = CONFIG_STEP_TP5;
+    _step = CONFIG_STEP_NEW;
     init_dsp();
   }
 
@@ -50,6 +51,11 @@ protected:
     {
       switch (_step)
       {
+        case CONFIG_STEP_NEW:
+          print_step("Starting");
+          set_step(CONFIG_STEP_TP5);
+          break;
+
         case CONFIG_STEP_TP5:
           print_step("TP5");
           print_result(send_tp5_cfg());
@@ -185,11 +191,11 @@ private:
     nav_data.fix_mode = FIX_MODE_AUTO;
     nav_data.fixed_alt = 0;
     nav_data.fixed_alt_var = 10000; // scaling 0.0001, [m^2] Fixed altitude variance for 2D mode 
-    nav_data.min_elv = 5; // [deg], Minimum elevation for a GNSS satellite to be used in NAV 
+    nav_data.min_elv = 10; // [deg], Minimum elevation for a GNSS satellite to be used in NAV 
     nav_data.p_dop = 250; // scaling 0.1, Position DOP mask to use
     nav_data.t_dop = 250; // scaling 0.1, Time DOP mask to use
     nav_data.p_acc = 100; // [m] Position accuracy mask
-    nav_data.t_acc = 300; // [m] Time accuracy mask
+    nav_data.t_acc = 350; // [m] Time accuracy mask
     nav_data.stat_hold_trsh = 0; // [cm/s] Static hold threshold
     nav_data.dgnss_timeout = 60; // [s] DGNSS timeout
     nav_data.cno_trsh_num_SVs = 0; // Number of satellites required to have C/N0 above cnoThresh for a fix to be attempted

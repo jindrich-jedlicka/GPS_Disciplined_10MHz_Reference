@@ -63,44 +63,44 @@ typedef struct ubx_cfg_gnss_block_t
     switch (_id)
     {
       case GNSS_ID_GPS:
-        res_trk_ch = 8;
-        max_trk_ch = 13;
+        res_trk_ch = 4;
+        max_trk_ch = 16;
         flags = GNSS_FLAG_GPS_L1C_A;
         break;
 
       case GNSS_ID_SBAS:
-        res_trk_ch = 3;
+        res_trk_ch = 1;
         max_trk_ch = 3;
         flags = GNSS_FLAG_SBAS_L1C_A;
         break;
 
       case GNSS_ID_GALILEO:
-        res_trk_ch = 8;
-        max_trk_ch = 12;
+        res_trk_ch = 4;
+        max_trk_ch = 8;
         flags = GNSS_FLAG_GALILEO_E1;
         break;
 
       case GNSS_ID_BEI_DOU:
-        res_trk_ch = 2;
-        max_trk_ch = 5;
+        res_trk_ch = 8;
+        max_trk_ch = 16;
         flags = GNSS_FLAG_BEI_DOU_B1I;
         break;
 
       case GNSS_ID_IMES:
         res_trk_ch = 0;
-        max_trk_ch = 0;
-        flags = 0;
+        max_trk_ch = 8;
+        flags = GNSS_FLAG_QZSS_L1C_A;
         break;
 
       case GNSS_ID_QZSS:
-        res_trk_ch = 3;
-        max_trk_ch = 4;
-        flags = GNSS_FLAG_QZSS_L1C_A | GNSS_FLAG_QZSS_L1S;
+        res_trk_ch = 0;
+        max_trk_ch = 3;
+        flags = GNSS_FLAG_QZSS_L1C_A;
         break;
 
       case GNSS_ID_GLONASS:
         res_trk_ch = 8;
-        max_trk_ch = 12;
+        max_trk_ch = 14;
         flags = GNSS_FLAG_GLONASS_L1;
         break;
     }
