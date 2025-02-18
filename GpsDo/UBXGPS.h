@@ -8,6 +8,8 @@
 
 //////////////////////////////////////////////////////////////////////////////////
 // CAT_CFG
+#define CFG_RST   0x04
+#define CFG_CFG   0x09
 #define CFG_NAV5  0x24
 #define CFG_TP5   0x31
 #define CFG_GNSS  0x3E
