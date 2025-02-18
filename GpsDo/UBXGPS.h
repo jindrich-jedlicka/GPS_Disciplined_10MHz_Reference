@@ -181,7 +181,7 @@ public:
   void hw_reset()
   {
     ubx_cfg_rst_t rst_data;
-    rst_data.nav_bbr_mask = NAV_BBR_HOT_START;
+    rst_data.nav_bbr_mask = NAV_BBR_COLD_START;
     rst_data.reset_mode = RESET_MODE_HW;
     send_msg_no_ack(msg_id_t(CAT_CFG, CFG_RST), sizeof(rst_data), (uint8_t *)&rst_data);    
   }
