@@ -115,6 +115,7 @@ public:
 
   void begin() 
   {
+    hd44780_pinIO::begin(DISP_COLS, DISP_ROWS);  //starting LCD
     createChar(0, one_line);
     createChar(1, two_lines);
     createChar(2, three_lines);
@@ -123,7 +124,6 @@ public:
     createChar(5, six_lines);
     createChar(6, seven_lines);
     createChar(7, eight_lines);    
-    hd44780_pinIO::begin(DISP_COLS, DISP_ROWS);  //starting LCD
     clear();
   }
 
