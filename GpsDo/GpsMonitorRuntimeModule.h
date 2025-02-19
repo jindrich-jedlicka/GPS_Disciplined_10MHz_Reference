@@ -47,7 +47,7 @@ protected:
     if (get_encoder_pos() != 0)
       set_new_pos(0);
     else
-      set_next_module(MODULE_TYPE_DIAG);
+      set_next_module(MODULE_TYPE_MENU);
   }
 
   virtual void on_encoder_moved(uint8_t pos)

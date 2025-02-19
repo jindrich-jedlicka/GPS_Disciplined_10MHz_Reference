@@ -1,6 +1,7 @@
 #ifndef _UBX_CFG_ANT
 #define _UBX_CFG_ANT
 
+
 typedef enum ANT_FLAGS : uint16_t
 {
   ANT_FLAGS_SVCS = 0x01,        // Enable antenna supply voltage control signal

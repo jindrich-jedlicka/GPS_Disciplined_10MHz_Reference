@@ -174,6 +174,22 @@ public:
   }
 
 public:
+  static void print_result(ACK_RESULT result)
+  {
+    switch (result)
+    {
+      case ACK_RESULT_TIMEOUT:
+        RuntimeContext::get_display().print(" TIMEOUT");
+        break;
+      case ACK_RESULT_FALSE:
+        RuntimeContext::get_display().print(" FAILED");
+        break;
+      case ACK_RESULT_TRUE:
+        RuntimeContext::get_display().print(" OK");
+        break;
+    }
+  }
+
   void init(Stream* stream)
   {
     _gps_stream = stream;
@@ -191,7 +207,7 @@ public:
   {
     ubx_cfg_cfg_t cfg_data;
     cfg_data.save_mask = CFG_MASK_ALL;
-    cfg_data.device_mask = CFG_DEVICE_BBR;
+    cfg_data.device_mask = CFG_DEVICE_BBR | CFG_DEVICE_FLASH;
     return send_msg(msg_id_t(CAT_CFG, CFG_CFG), sizeof(cfg_data), (uint8_t *)&cfg_data);
   }
 

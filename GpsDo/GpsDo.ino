@@ -44,50 +44,8 @@ ISR(PCINT2_vect)
 {
   NeoSWSerial::rxISR(PIND);
 }
-/*
-char readChar;
 
-bool data_available()
-{
-    update_index();
-    while (gpsSerial.available())
-    {
-      nmeaGps.handle( gpsSerial.read() );
-      update_index();
-    }
-    return nmeaGps.available();
-}
-*/
 void loop()
 {
   modules.loop();
-/*
-  while (gpsSerial.available())
-  {
-    gpsMonitor.char_received( gpsSerial.read() );
-    update_index();
-  }
-  gpsMonitor.data_transfer_completed(lcd);
-  while (data_available()) 
-  {
-    gpsData.set_data(nmeaGps);
-    if (activeView != NULL)
-      activeView->display_data(lcd, index, gpsData);
-  }  
-  update_index();*/
-//  if (gpsSerial.available())
-//  {
-//    readChar = gpsSerial.read();
-//    Serial.write(readChar);
-//    //gpsParser.encode(readChar);
-//  }
-  /*
-  if (Serial.available() > 0)
-  {
-    readChar = Serial.read(); 
-//    lcd.setCursor(5, 1);
-//    lcd.print(readChar, HEX);
-    gpsSerial.write(readChar);
-  }
-  */
 }

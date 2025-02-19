@@ -128,6 +128,14 @@ public:
   }
 
 public:
+  void print_at_row(const uint8_t row, const String &text)
+  {
+    setCursor(0, row);
+    print_n_char(DISP_COLS, ' ');
+    setCursor(0, row);
+    print(text);    
+  }
+
   uint8_t print_bar_val(uint8_t val)
   {
     if (MAX_BAR_VALUE < val)

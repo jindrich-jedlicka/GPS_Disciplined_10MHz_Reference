@@ -9,18 +9,16 @@
 #include "ubx_cfg_ant.h"
 #include "UBXGPS.h"
 
-#define STEP_TIME_MS 1000 
-
-static GNSS_ID gnss_ids[] = { GNSS_ID_GPS, GNSS_ID_SBAS, GNSS_ID_GALILEO, GNSS_ID_BEI_DOU, GNSS_ID_QZSS, GNSS_ID_GLONASS };
-static GNSS_ID gps_ids[] = { GNSS_ID_GPS, GNSS_ID_SBAS, GNSS_ID_QZSS };
+#define ANT_PIN_OCD 14
+#define ANT_PIN_SCD 15
+#define ANT_PIN_SWITCH 16 
+#define ANT_PIN_RECONFIG 1 << 15
 
 typedef enum CONFIG_STEP : uint8_t
 {
   CONFIG_STEP_NEW,
   CONFIG_STEP_TP5,
   CONFIG_STEP_NAV5,
-  CONFIG_STEP_GNSS,
-  CONFIG_STEP_SAVE,
   CONFIG_STEP_WAITING_DATA,
   CONFIG_STEP_DONE,
 } CONFIG_STEP;
@@ -44,7 +42,7 @@ protected:
 
     _step_start_time = millis() - STEP_TIME_MS;
     _step = CONFIG_STEP_NEW;
-    init_dsp();
+    init_dsp("Neo-8M GPS:");
   }
 
   virtual void on_loop()
@@ -54,38 +52,25 @@ protected:
       switch (_step)
       {
         case CONFIG_STEP_NEW:
-          print_step("ANT");
-          print_result(send_ant_cfg());
+          print_details("ANT");
+          UBXGPS::print_result(send_ant_cfg());
           set_step(CONFIG_STEP_TP5);
           break;
 
         case CONFIG_STEP_TP5:
-          print_step("TP5");
-          print_result(send_tp5_cfg());
+          print_details("TP5");
+          UBXGPS::print_result(send_tp5_cfg());
           set_step(CONFIG_STEP_NAV5);
           break;
 
         case CONFIG_STEP_NAV5:
-          print_step("NAV");
-          print_result(send_nav_cfg());
-          set_step(CONFIG_STEP_GNSS);
-          break;
-
-        case CONFIG_STEP_GNSS:
-          print_step("GNSS");
-          print_result(send_gnss_cfg(sizeof(gps_ids), gps_ids));
-          set_step(CONFIG_STEP_SAVE);
-          break;
-
-        case CONFIG_STEP_SAVE:
-          print_step("CFG");
-          print_result(_ubx_gps.save_all_to_bbr());
+          print_details("NAV");
+          UBXGPS::print_result(send_nav_cfg());
           set_step(CONFIG_STEP_WAITING_DATA);
           break;
 
         case CONFIG_STEP_WAITING_DATA:
-          print_step("Waiting for data");
-          _ubx_gps.hw_reset();
+          print_details("Waiting for data");
           set_step(CONFIG_STEP_DONE);
           break;
 
@@ -113,76 +98,16 @@ private:
     _step = step;
   }
 
-  void init_dsp()
-  {
-    GpsLiquidCrystal& dsp = RuntimeContext::get_display();
-
-    dsp.clear();
-    dsp.setCursor(0, 0);
-    dsp.print("Neo-8M GPS:");
-  }
-
-  void print_result(ACK_RESULT result)
-  {
-    switch (result)
-    {
-      case ACK_RESULT_TIMEOUT:
-        RuntimeContext::get_display().print(" TIMEOUT");
-        break;
-      case ACK_RESULT_FALSE:
-        RuntimeContext::get_display().print(" FAILED");
-        break;
-      case ACK_RESULT_TRUE:
-        RuntimeContext::get_display().print(" OK");
-        break;
-    }
-  }
-
-  void print_step(const String &text)
-  {
-    GpsLiquidCrystal& dsp = RuntimeContext::get_display();
-    dsp.setCursor(0, 1);
-    dsp.print("                ");
-    dsp.setCursor(0, 1);
-    dsp.print(text);    
-  }
-
   ACK_RESULT send_ant_cfg()
   {
     ubx_cfg_ant_t ant_data;
     ant_data.flags = ANT_FLAGS_SVCS;
-    ant_data.pins = 16;          // pins-pinSwitch
-    ant_data.pins |= (15 << 5);  // pins-pinSCD
-    ant_data.pins |= (14 << 10); // pins-pinOCD
-    ant_data.pins |= 1 << 15;    // reconfig
+    ant_data.pins = ANT_PIN_SWITCH;
+    ant_data.pins |= (ANT_PIN_SCD << 5);  
+    ant_data.pins |= (ANT_PIN_OCD << 10);
+    ant_data.pins |= ANT_PIN_RECONFIG;
 
     return _ubx_gps.send_msg(msg_id_t(CAT_CFG, CFG_ANT), sizeof(ant_data), (uint8_t *)&ant_data);
-  }
-
-  bool contains_id(const GNSS_ID id, const uint8_t ids_len, const GNSS_ID* ids)
-  {
-    for (uint8_t i = 0; i < ids_len; i++)
-    {
-      if (ids[i] == id)
-        return true;
-    }
-    return false;
-  }
-
-  ACK_RESULT send_gnss_cfg(uint8_t ids_len, GNSS_ID* ids)
-  {
-    const uint8_t len = sizeof(gnss_ids) / sizeof(gnss_ids[0]);
-    ubx_cfg_gnss_block_t gnss[len];
-
-    for (uint8_t i = 0; i < len; i++)
-    {
-      gnss[i] = ubx_cfg_gnss_block_t(gnss_ids[i], contains_id(gnss_ids[i], ids_len, ids));
-    }
-
-    ubx_cfg_gnss_t gnss_base;
-    gnss_base.num_config_blocks = len;
-
-    return _ubx_gps.send_msg(msg_id_t(CAT_CFG, CFG_GNSS), sizeof(gnss_base), (uint8_t *)&gnss_base, sizeof(gnss), (uint8_t *)&gnss);
   }
 
   ACK_RESULT send_tp5_cfg()

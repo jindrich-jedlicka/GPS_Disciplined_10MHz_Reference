@@ -1,6 +1,8 @@
 #ifndef _RUNTIME_MODULE
 #define _RUNTIME_MODULE
 
+#define STEP_TIME_MS 1000 
+
 typedef enum MODULE_TYPE : uint8_t
 {
   MODULE_TYPE_MENU = 0,
@@ -34,6 +36,20 @@ public:
   }
 
 protected:
+  static void init_dsp(const String &text)
+  {
+    GpsLiquidCrystal& dsp = RuntimeContext::get_display();
+
+    dsp.clear();
+    dsp.setCursor(0, 0);
+    dsp.print(text);
+  }
+
+  inline void print_details(const String &text)
+  {
+    RuntimeContext::get_display().print_at_row(1, text);
+  }
+
   void check_encoder()
   {
     if (RuntimeContext::encoder_button_pressed())

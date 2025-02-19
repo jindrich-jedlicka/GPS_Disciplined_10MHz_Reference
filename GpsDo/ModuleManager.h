@@ -49,7 +49,9 @@ private:
       case MODULE_TYPE_GPS_MONITOR:
         return &_gpsModule;
 
-      // TODO:
+      case MODULE_TYPE_MENU:
+        return &_menuModule;
+
       case MODULE_TYPE_CONFIG:
         return &_configModule;
 
