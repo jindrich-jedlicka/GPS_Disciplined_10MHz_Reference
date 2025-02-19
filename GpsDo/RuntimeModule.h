@@ -41,7 +41,7 @@ protected:
     GpsLiquidCrystal& dsp = RuntimeContext::get_display();
 
     dsp.clear();
-    dsp.setCursor(0, 0);
+    dsp.home();
     dsp.print(text);
   }
 

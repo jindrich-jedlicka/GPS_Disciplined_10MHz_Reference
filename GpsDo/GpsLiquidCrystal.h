@@ -133,7 +133,7 @@ public:
     setCursor(0, row);
     print_n_char(DISP_COLS, ' ');
     setCursor(0, row);
-    print(text);    
+    print(text);
   }
 
   uint8_t print_bar_val(uint8_t val)

@@ -9,11 +9,6 @@
 #include "ubx_cfg_ant.h"
 #include "UBXGPS.h"
 
-#define ANT_PIN_OCD 14
-#define ANT_PIN_SCD 15
-#define ANT_PIN_SWITCH 16 
-#define ANT_PIN_RECONFIG 1 << 15
-
 typedef enum CONFIG_STEP : uint8_t
 {
   CONFIG_STEP_NEW,
@@ -102,10 +97,7 @@ private:
   {
     ubx_cfg_ant_t ant_data;
     ant_data.flags = ANT_FLAGS_SVCS;
-    ant_data.pins = ANT_PIN_SWITCH;
-    ant_data.pins |= (ANT_PIN_SCD << 5);  
-    ant_data.pins |= (ANT_PIN_OCD << 10);
-    ant_data.pins |= ANT_PIN_RECONFIG;
+    ant_data.pins = ubx_cfg_ant_t::to_pins(ANT_DEF_PIN_SWITCH, ANT_DEF_PIN_SCD, ANT_DEF_PIN_OCD);
 
     return _ubx_gps.send_msg(msg_id_t(CAT_CFG, CFG_ANT), sizeof(ant_data), (uint8_t *)&ant_data);
   }

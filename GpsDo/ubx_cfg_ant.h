@@ -1,6 +1,10 @@
 #ifndef _UBX_CFG_ANT
 #define _UBX_CFG_ANT
 
+#define ANT_DEF_PIN_OCD 14
+#define ANT_DEF_PIN_SCD 15
+#define ANT_DEF_PIN_SWITCH 16 
+#define ANT_PIN_RECONFIG 1 << 15
 
 typedef enum ANT_FLAGS : uint16_t
 {
@@ -20,6 +24,15 @@ typedef struct ubx_cfg_ant_t
   {
     flags = 0;
     pins = 0;
+  }
+
+  static uint16_t to_pins(const uint8_t switch_pin, const uint8_t scd_pin, const uint8_t ocd_pin)
+  {
+    uint16_t pins = (uint16_t)switch_pin;
+    pins |= (((uint16_t)scd_pin) << 5);  
+    pins |= (((uint16_t)ocd_pin) << 10);
+    pins |= ANT_PIN_RECONFIG;
+    return pins;
   }
 } ubx_cfg_ant_t;
 
