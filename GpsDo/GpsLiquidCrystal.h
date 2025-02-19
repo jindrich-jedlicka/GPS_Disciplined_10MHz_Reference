@@ -1,7 +1,7 @@
 #ifndef _GPS_LIQUID_CRYSTAL
 #define _GPS_LIQUID_CRYSTAL
 
-#include <LiquidCrystal.h>
+#include <hd44780_pinIO.h>
 
 //setting up LCD INPUT pins
 #define PIN_RS 12
@@ -102,10 +102,10 @@ byte eight_lines[8] = {
   B11111,
 };
 
-class GpsLiquidCrystal : public LiquidCrystal {
+class GpsLiquidCrystal : public hd44780_pinIO {
 public:
   GpsLiquidCrystal()
-    : LiquidCrystal(PIN_RS, PIN_ENABLE, PIN_D4, PIN_D5, PIN_D6, PIN_D7) 
+    : hd44780_pinIO(PIN_RS, PIN_ENABLE, PIN_D4, PIN_D5, PIN_D6, PIN_D7) 
   {
     // do nothing
   }
@@ -122,8 +122,8 @@ public:
     createChar(4, five_lines);
     createChar(5, six_lines);
     createChar(6, seven_lines);
-    createChar(7, eight_lines);
-    LiquidCrystal::begin(DISP_COLS, DISP_ROWS);  //starting LCD
+    createChar(7, eight_lines);    
+    hd44780_pinIO::begin(DISP_COLS, DISP_ROWS);  //starting LCD
     clear();
   }
 
