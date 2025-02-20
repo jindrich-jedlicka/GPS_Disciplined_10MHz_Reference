@@ -12,6 +12,7 @@
 typedef enum CONFIG_STEP : uint8_t
 {
   CONFIG_STEP_NEW,
+  CONFIG_STEP_ANT,
   CONFIG_STEP_TP5,
   CONFIG_STEP_NAV5,
   CONFIG_STEP_WAITING_DATA,
@@ -35,9 +36,10 @@ protected:
   {
     _ubx_gps.init(&RuntimeContext::get_gps_stream());
 
-    _step_start_time = millis() - STEP_TIME_MS;
+    _step_start_time = millis();
     _step = CONFIG_STEP_NEW;
     init_dsp("Neo-8M GPS:");
+    print_details("Starting");
   }
 
   virtual void on_loop()
@@ -47,6 +49,10 @@ protected:
       switch (_step)
       {
         case CONFIG_STEP_NEW:
+          set_step(CONFIG_STEP_ANT);
+          break;
+
+        case CONFIG_STEP_ANT:
           print_details("ANT");
           UBXGPS::print_result(send_ant_cfg());
           set_step(CONFIG_STEP_TP5);
